@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Production
+/out
+/build
+/.next
+
+# Environment
+.env.local
+.env.*.local
+.env
+
+# Testing
+/coverage
+.vitest
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# System
+.DS_Store
+Thumbs.db
