@@ -1,5 +1,4 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { updateSession } from '@supabase/auth-helpers-nextjs';
 
 /**
  * Middleware to validate JWT token on protected routes
@@ -12,15 +11,7 @@ export async function middleware(request: NextRequest) {
   const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
 
   if (isPublicRoute) {
-    return await updateSession(request);
-  }
-
-  // Protected routes - refresh session and check auth
-  let response = await updateSession(request);
-
-  // If no session and trying to access protected route, redirect to login
-  if (!response) {
-    response = NextResponse.next();
+    return NextResponse.next();
   }
 
   // Check if user is authenticated by looking for token in cookies
@@ -32,7 +23,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  return response;
+  return NextResponse.next();
 }
 
 export const config = {

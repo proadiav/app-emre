@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it } from 'vitest';
 
 describe('Authentication Flow (Integration)', () => {
   // Note: These tests are marked as pending (skipped) for Phase 1

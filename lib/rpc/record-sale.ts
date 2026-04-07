@@ -28,12 +28,14 @@ export async function recordSaleWithPoints(
 
     if (error) {
       console.error('[recordSaleWithPoints] RPC Error:', error);
-      return errorResponse(ErrorCodes.UNKNOWN_ERROR, getErrorMessage(ErrorCodes.UNKNOWN_ERROR));
+      const response = errorResponse(ErrorCodes.UNKNOWN_ERROR, getErrorMessage(ErrorCodes.UNKNOWN_ERROR));
+      return response as unknown as ApiResponse<RecordSaleResult>;
     }
 
     if (!data || data.length === 0) {
       console.error('[recordSaleWithPoints] No response from RPC');
-      return errorResponse(ErrorCodes.UNKNOWN_ERROR, getErrorMessage(ErrorCodes.UNKNOWN_ERROR));
+      const response = errorResponse(ErrorCodes.UNKNOWN_ERROR, getErrorMessage(ErrorCodes.UNKNOWN_ERROR));
+      return response as unknown as ApiResponse<RecordSaleResult>;
     }
 
     const result = data[0];
@@ -41,7 +43,8 @@ export async function recordSaleWithPoints(
     // RPC returned error_code
     if (result.error_code) {
       const message = getErrorMessage(result.error_code);
-      return errorResponse(result.error_code, message);
+      const response = errorResponse(result.error_code, message);
+      return response as unknown as ApiResponse<RecordSaleResult>;
     }
 
     return successResponse<RecordSaleResult>({
@@ -51,6 +54,7 @@ export async function recordSaleWithPoints(
     });
   } catch (error) {
     console.error('[recordSaleWithPoints] Unexpected error:', error);
-    return errorResponse(ErrorCodes.UNKNOWN_ERROR, getErrorMessage(ErrorCodes.UNKNOWN_ERROR));
+    const response = errorResponse(ErrorCodes.UNKNOWN_ERROR, getErrorMessage(ErrorCodes.UNKNOWN_ERROR));
+    return response as unknown as ApiResponse<RecordSaleResult>;
   }
 }

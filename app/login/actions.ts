@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createServerSupabase } from '@/lib/supabase/server';
 import { loginSchema } from '@/lib/validation/schemas';
-import { errorResponse, successResponse, ErrorCodes, getErrorMessage } from '@/lib/utils/errors';
+import { errorResponse, ErrorCodes, getErrorMessage } from '@/lib/utils/errors';
 import { ApiResponse } from '@/lib/utils/errors';
 
 /**

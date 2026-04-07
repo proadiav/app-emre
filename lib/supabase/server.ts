@@ -1,22 +1,32 @@
-import { createServerClient, type CookieOptions } from '@supabase/auth-helpers-nextjs';
+import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
 export const createServerSupabase = () => {
-  const cookieStore = cookies();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const cookieStore = cookies() as any;
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
+        getAll() {
+          return cookieStore.getAll();
         },
-        set(name: string, value: string, options: CookieOptions) {
-          cookieStore.set({ name, value, ...options });
-        },
-        remove(name: string, options: CookieOptions) {
-          cookieStore.delete({ name, ...options });
+        setAll(cookiesToSet: unknown[]) {
+          try {
+            (cookiesToSet as Array<{ name: string; value: string; options?: unknown }>).forEach(
+              ({ name, value, options }) => {
+                cookieStore.set(
+                  name,
+                  value,
+                  options as Record<string, unknown> | undefined
+                );
+              }
+            );
+          } catch (error) {
+            console.error('[setAll] Error:', error);
+          }
         },
       },
     }
