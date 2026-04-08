@@ -107,6 +107,16 @@ export async function createCustomer(input: unknown): Promise<ApiResponse<Create
           getErrorMessage(ErrorCodes.INVALID_REFERRER)
         );
       }
+
+      // Check that referrer is not already a referee (no self-referral chain)
+      if (referrerResult.customer.referrer_id) {
+        console.warn('[createCustomer] Referrer is already a referee:', { referrerId });
+        return errorResponse(
+          ErrorCodes.INVALID_REFERRER,
+          'Un parrain ne peut pas être déjà parrainé'
+        );
+      }
+
       referrerExists = true;
     }
 
