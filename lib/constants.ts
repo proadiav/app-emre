@@ -13,6 +13,7 @@ export const BUSINESS = {
 
   // Email verification
   TOKEN_EXPIRY_DAYS: 7,
+  TOKEN_EXPIRY_MS: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
 
   // Staff roles
   ROLES: {
