@@ -4,8 +4,18 @@
  */
 
 import * as crypto from 'crypto';
+import { timingSafeEqual } from 'crypto';
 
 const SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-prod';
+
+// Validate JWT_SECRET configuration
+if (!process.env.JWT_SECRET && process.env.NODE_ENV === 'production') {
+  throw new Error('JWT_SECRET environment variable is required in production');
+}
+
+if (!process.env.JWT_SECRET && process.env.NODE_ENV !== 'production') {
+  console.warn('[JWT] WARNING: JWT_SECRET not set, using dev default. Set JWT_SECRET in production!');
+}
 
 /**
  * JWT payload structure
@@ -63,13 +73,19 @@ export function verifyToken(token: string): { customerId: string; valid: boolean
 
     const [header, body, signature] = parts;
 
-    // Verify signature
+    // Verify signature using timing-safe comparison
     const expectedSignature = crypto
       .createHmac('sha256', SECRET)
       .update(`${header}.${body}`)
       .digest('base64url');
 
-    if (signature !== expectedSignature) {
+    try {
+      if (!timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature))) {
+        console.warn('[verifyToken] Signature mismatch: token may be tampered');
+        return { customerId: '', valid: false };
+      }
+    } catch {
+      // In case buffers are different lengths
       console.warn('[verifyToken] Signature mismatch: token may be tampered');
       return { customerId: '', valid: false };
     }
