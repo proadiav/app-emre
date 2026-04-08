@@ -23,11 +23,11 @@ export function successResponse<T>(data: T): ApiResponse<T> {
 /**
  * Create an error response
  */
-export function errorResponse(code: string, message: string): ApiResponse {
+export function errorResponse<T = null>(code: string, message: string): ApiResponse<T> {
   return {
     success: false,
     error: { code, message },
-  };
+  } as ApiResponse<T>;
 }
 
 /**
@@ -39,8 +39,13 @@ export const ErrorCodes = {
   USER_NOT_FOUND: 'user_not_found',
   EMAIL_ALREADY_EXISTS: 'email_already_exists',
 
-  // Sales
+  // Customers
+  CUSTOMER_ALREADY_EXISTS: 'customer_already_exists',
   CUSTOMER_NOT_FOUND: 'customer_not_found',
+  INVALID_REFERRER: 'invalid_referrer',
+  SELF_REFERRAL: 'self_referral',
+
+  // Sales
   EMAIL_NOT_VERIFIED: 'email_not_verified',
   INVALID_AMOUNT: 'invalid_amount',
 
@@ -62,7 +67,11 @@ export const ErrorMessages: Record<string, string> = {
   [ErrorCodes.USER_NOT_FOUND]: 'Utilisateur non trouvé',
   [ErrorCodes.EMAIL_ALREADY_EXISTS]: 'Cet email existe déjà',
 
+  [ErrorCodes.CUSTOMER_ALREADY_EXISTS]: 'Ce client existe déjà',
   [ErrorCodes.CUSTOMER_NOT_FOUND]: 'Client non trouvé',
+  [ErrorCodes.INVALID_REFERRER]: 'Parrain invalide',
+  [ErrorCodes.SELF_REFERRAL]: 'Un client ne peut pas être son propre parrain',
+
   [ErrorCodes.EMAIL_NOT_VERIFIED]: 'Email non vérifié',
   [ErrorCodes.INVALID_AMOUNT]: 'Montant invalide',
 

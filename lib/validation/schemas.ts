@@ -41,3 +41,14 @@ export const verifyEmailSchema = z.object({
 });
 
 export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;
+
+// Customer creation schema
+export const createCustomerSchema = z.object({
+  email: z.string().email('Email invalide').toLowerCase().trim(),
+  phone: z.string().min(1, 'Téléphone requis'),
+  firstName: z.string().min(1, 'Prénom requis').max(100, 'Prénom trop long'),
+  lastName: z.string().min(1, 'Nom requis').max(100, 'Nom trop long'),
+  referrerId: z.string().uuid('ID de parrain invalide').nullable().optional(),
+});
+
+export type CreateCustomerInput = z.infer<typeof createCustomerSchema>;

@@ -2,7 +2,6 @@ import { createServerSupabase } from '@/lib/supabase/server';
 import type { Database } from '@/lib/supabase/types';
 
 type Voucher = Database['public']['Tables']['vouchers']['Row'];
-type Customer = Database['public']['Tables']['customers']['Row'];
 
 // Extended voucher type with referrer details
 interface VoucherWithReferrer extends Voucher {
