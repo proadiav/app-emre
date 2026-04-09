@@ -84,6 +84,17 @@ CREATE TABLE vouchers (
 CREATE INDEX idx_vouchers_referrer_id ON vouchers(referrer_id);
 CREATE INDEX idx_vouchers_status ON vouchers(status);
 
+-- Program settings table (single row for global configuration)
+CREATE TABLE program_settings (
+  id BIGINT PRIMARY KEY CHECK (id = 1),
+  min_sale_amount INTEGER NOT NULL DEFAULT 30,
+  points_per_referral INTEGER NOT NULL DEFAULT 1,
+  voucher_value_euros INTEGER NOT NULL DEFAULT 20,
+  points_for_voucher INTEGER NOT NULL DEFAULT 5,
+  created_at TIMESTAMP DEFAULT NOW() AT TIME ZONE 'UTC',
+  updated_at TIMESTAMP DEFAULT NOW() AT TIME ZONE 'UTC'
+);
+
 -- Audit logs table
 CREATE TABLE audit_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

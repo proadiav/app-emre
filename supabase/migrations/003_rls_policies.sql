@@ -4,6 +4,7 @@ ALTER TABLE customers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sales ENABLE ROW LEVEL SECURITY;
 ALTER TABLE referrals ENABLE ROW LEVEL SECURITY;
 ALTER TABLE vouchers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE program_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
 
 -- Staff: vendeur sees only self, admin sees all
@@ -62,6 +63,20 @@ CREATE POLICY "vouchers_insert_rpc_only" ON vouchers
 CREATE POLICY "vouchers_update_rpc_only" ON vouchers
   FOR UPDATE
   WITH CHECK (FALSE);
+
+-- Program settings: used by admin server-side only, RLS allows admin client (bypasses RLS)
+CREATE POLICY "program_settings_select_policy" ON program_settings
+  FOR SELECT
+  USING (true);  -- Admin client bypasses RLS anyway
+
+CREATE POLICY "program_settings_update_policy" ON program_settings
+  FOR UPDATE
+  USING (true)  -- Admin client bypasses RLS anyway
+  WITH CHECK (true);
+
+CREATE POLICY "program_settings_insert_policy" ON program_settings
+  FOR INSERT
+  WITH CHECK (true);  -- Admin client bypasses RLS anyway
 
 -- Audit logs: admin only can read, RPC writes
 CREATE POLICY "audit_logs_select_policy" ON audit_logs

@@ -59,6 +59,17 @@ export interface Database {
           created_at: string;
         };
       };
+      program_settings: {
+        Row: {
+          id: number;
+          min_sale_amount: number;
+          points_per_referral: number;
+          voucher_value_euros: number;
+          points_for_voucher: number;
+          created_at: string;
+          updated_at: string;
+        };
+      };
       audit_logs: {
         Row: {
           id: string;
