@@ -52,3 +52,28 @@ export const createCustomerSchema = z.object({
 });
 
 export type CreateCustomerInput = z.infer<typeof createCustomerSchema>;
+
+// Settings schema
+export const updateSettingsSchema = z.object({
+  min_sale_amount: z.number().positive('Montant minimum doit être supérieur à 0').optional(),
+  points_per_referral: z.number().int('Points doit être un entier').positive().optional(),
+  voucher_value_euros: z.number().positive('Valeur bon doit être supérieure à 0').optional(),
+  points_for_voucher: z.number().int('Points doit être un entier').positive().optional(),
+});
+
+export type UpdateSettingsInput = z.infer<typeof updateSettingsSchema>;
+
+// Staff creation schema
+export const createStaffSchema = z.object({
+  email: z.string().email('Email invalide').toLowerCase().trim(),
+  role: z.enum(['admin', 'vendeur'], { errorMap: () => ({ message: 'Rôle invalide' }) }),
+});
+
+export type CreateStaffInput = z.infer<typeof createStaffSchema>;
+
+// Staff update schema
+export const updateStaffSchema = z.object({
+  role: z.enum(['admin', 'vendeur'], { errorMap: () => ({ message: 'Rôle invalide' }) }),
+});
+
+export type UpdateStaffInput = z.infer<typeof updateStaffSchema>;
