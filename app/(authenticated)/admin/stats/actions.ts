@@ -80,8 +80,9 @@ export async function getStatisticsAction(): Promise<ApiResponse<StatisticsData>
     const topReferrers: StatisticsData['topReferrers'] = [];
     for (const referrer of topReferrersRaw) {
       try {
-        const customer = await getCustomerById(referrer.customer_id);
-        if (customer) {
+        const customerResponse = await getCustomerById(referrer.customer_id);
+        if (customerResponse.success && customerResponse.customer) {
+          const customer = customerResponse.customer;
           topReferrers.push({
             customerId: referrer.customer_id,
             email: customer.email,
@@ -152,7 +153,7 @@ export async function exportStatsAsCSVAction(): Promise<ApiResponse<string>> {
 
     // Get statistics
     const statsResult = await getStatisticsAction();
-    if (!statsResult.ok || !statsResult.data) {
+    if (!statsResult.success || !statsResult.data) {
       console.error('[exportStatsAsCSVAction] Failed to fetch statistics:', statsResult.error);
       return errorResponse(ErrorCodes.UNKNOWN_ERROR, 'Impossible de générer le rapport');
     }

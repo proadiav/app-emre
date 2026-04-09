@@ -11,9 +11,6 @@ import {
 } from '@/lib/utils/errors';
 import { listStaff, createStaff, updateStaff, deleteStaff } from '@/lib/db/staff';
 import { logAction } from '@/lib/utils/audit';
-import type { Database } from '@/lib/supabase/types';
-
-type StaffMember = Database['public']['Tables']['staff']['Row'];
 
 interface StaffData {
   id: string;

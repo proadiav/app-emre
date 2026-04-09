@@ -38,6 +38,7 @@ export const ErrorCodes = {
   INVALID_CREDENTIALS: 'invalid_credentials',
   USER_NOT_FOUND: 'user_not_found',
   EMAIL_ALREADY_EXISTS: 'email_already_exists',
+  FORBIDDEN: 'forbidden',
 
   // Customers
   CUSTOMER_ALREADY_EXISTS: 'customer_already_exists',
@@ -66,6 +67,7 @@ export const ErrorMessages: Record<string, string> = {
   [ErrorCodes.INVALID_CREDENTIALS]: 'Email ou mot de passe invalide',
   [ErrorCodes.USER_NOT_FOUND]: 'Utilisateur non trouvé',
   [ErrorCodes.EMAIL_ALREADY_EXISTS]: 'Cet email existe déjà',
+  [ErrorCodes.FORBIDDEN]: 'Accès refusé. Permissions insuffisantes',
 
   [ErrorCodes.CUSTOMER_ALREADY_EXISTS]: 'Ce client existe déjà',
   [ErrorCodes.CUSTOMER_NOT_FOUND]: 'Client non trouvé',

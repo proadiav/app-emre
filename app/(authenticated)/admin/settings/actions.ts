@@ -11,12 +11,6 @@ import {
 } from '@/lib/utils/errors';
 import { getSettings, updateSettings } from '@/lib/db/admin';
 import { logAction } from '@/lib/utils/audit';
-import type { Database } from '@/lib/supabase/types';
-
-type ProgramSettings = Pick<
-  Database['public']['Tables']['program_settings']['Row'],
-  'min_sale_amount' | 'points_per_referral' | 'voucher_value_euros' | 'points_for_voucher'
->;
 
 interface SettingsData {
   min_sale_amount: number;
