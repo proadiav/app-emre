@@ -70,8 +70,12 @@ export async function middleware(request: NextRequest) {
       }
 
       // Only allow access if role is 'admin' using timing-safe comparison
-      const adminRole = Buffer.from('admin');
-      const userRole = Buffer.from(staff.role);
+      // Pad both buffers to max possible role length (7 bytes for 'vendeur')
+      // to handle variable-length role strings (admin: 5 bytes, vendeur: 7 bytes)
+      const adminRole = Buffer.alloc(7);
+      adminRole.write('admin');
+      const userRole = Buffer.alloc(7);
+      userRole.write(staff.role);
 
       if (!timingSafeEqual(userRole, adminRole)) {
         const dashboardUrl = new URL('/dashboard', request.url);
