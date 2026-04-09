@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import * as jose from 'jose';
+import { timingSafeEqual } from 'crypto';
 
 /**
  * Middleware to validate JWT token on protected routes and enforce admin role on /admin routes
@@ -28,7 +29,7 @@ export async function middleware(request: NextRequest) {
   // Check admin routes require admin role
   if (pathname.startsWith('/admin') && token) {
     try {
-      const secret = new TextEncoder().encode(process.env.SUPABASE_JWT_SECRET || '');
+      const secret = new TextEncoder().encode(process.env.SUPABASE_JWT_SECRET!);
 
       // Decode JWT to get user ID
       const decoded = await jose.jwtVerify(token, secret);
@@ -63,18 +64,21 @@ export async function middleware(request: NextRequest) {
         .single();
 
       if (error || !staff) {
-        console.error('[middleware] Error fetching staff role:', error);
+        console.error('[middleware] Error verifying admin role - role check failed');
         const loginUrl = new URL('/login', request.url);
         return NextResponse.redirect(loginUrl);
       }
 
-      // Only allow access if role is 'admin'
-      if (staff.role !== 'admin') {
+      // Only allow access if role is 'admin' using timing-safe comparison
+      const adminRole = Buffer.from('admin');
+      const userRole = Buffer.from(staff.role);
+
+      if (!timingSafeEqual(userRole, adminRole)) {
         const dashboardUrl = new URL('/dashboard', request.url);
         return NextResponse.redirect(dashboardUrl);
       }
     } catch (error) {
-      console.error('[middleware] Error verifying admin role:', error);
+      console.error('[middleware] Error verifying admin role - JWT validation failed');
       const loginUrl = new URL('/login', request.url);
       return NextResponse.redirect(loginUrl);
     }
