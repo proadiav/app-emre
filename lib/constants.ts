@@ -1,7 +1,12 @@
 /**
- * Business constants
+ * Business constants (DEPRECATED)
+ *
+ * For referral/voucher/sale calculations, settings are now read dynamically
+ * from the program_settings table. These constants are kept for reference
+ * only and should NOT be used in business logic.
+ *
+ * See: lib/db/settings.ts
  */
-
 export const BUSINESS = {
   // Sale thresholds
   MIN_SALE_FOR_VALIDATION: 30, // €30 minimum to validate referral
