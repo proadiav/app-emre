@@ -2,17 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { getSettingsAction, updateSettingsAction } from './actions';
+import type { ProgramSettings } from '@/lib/db/settings';
 import { ApiResponse } from '@/lib/utils/errors';
 
-interface SettingsData {
-  min_sale_amount: number;
-  points_per_referral: number;
-  voucher_value_euros: number;
-  points_for_voucher: number;
-}
-
 export default function SettingsPage() {
-  const [settings, setSettings] = useState<SettingsData | null>(null);
+  const [settings, setSettings] = useState<ProgramSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +18,7 @@ export default function SettingsPage() {
       setLoading(true);
       setError(null);
       try {
-        const result = (await getSettingsAction()) as ApiResponse<SettingsData>;
+        const result = (await getSettingsAction()) as ApiResponse<ProgramSettings>;
         if (result.success && result.data) {
           setSettings(result.data);
         } else {
@@ -50,7 +44,7 @@ export default function SettingsPage() {
     setSuccess(false);
 
     try {
-      const result = (await updateSettingsAction(settings)) as ApiResponse<SettingsData>;
+      const result = (await updateSettingsAction(settings)) as ApiResponse<ProgramSettings>;
       if (result.success && result.data) {
         setSettings(result.data);
         setSuccess(true);
@@ -170,14 +164,14 @@ export default function SettingsPage() {
 
           {/* Points for voucher */}
           <div>
-            <label htmlFor="points_for_voucher" className="block text-sm font-medium text-gray-900">
+            <label htmlFor="voucher_threshold" className="block text-sm font-medium text-gray-900">
               Points requis pour générer un bon
             </label>
             <input
               type="number"
-              id="points_for_voucher"
-              name="points_for_voucher"
-              value={settings.points_for_voucher}
+              id="voucher_threshold"
+              name="voucher_threshold"
+              value={settings.voucher_threshold}
               onChange={handleChange}
               step="1"
               min="0"

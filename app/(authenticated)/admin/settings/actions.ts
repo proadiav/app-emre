@@ -9,22 +9,16 @@ import {
   getErrorMessage,
   ApiResponse,
 } from '@/lib/utils/errors';
-import { getSettings, updateSettings } from '@/lib/db/admin';
+import { getSettings, updateSettings } from '@/lib/db/settings';
+import type { ProgramSettings } from '@/lib/db/settings';
 import { logAction } from '@/lib/utils/audit';
-
-interface SettingsData {
-  min_sale_amount: number;
-  points_per_referral: number;
-  voucher_value_euros: number;
-  points_for_voucher: number;
-}
 
 /**
  * Server Action: Get current program settings (ADMIN only)
  *
  * Returns the current settings or defaults if none exist
  */
-export async function getSettingsAction(): Promise<ApiResponse<SettingsData>> {
+export async function getSettingsAction(): Promise<ApiResponse<ProgramSettings>> {
   try {
     // Check admin role
     const supabase = createServerSupabase();
@@ -52,7 +46,7 @@ export async function getSettingsAction(): Promise<ApiResponse<SettingsData>> {
     // Get settings
     const settings = await getSettings();
 
-    return successResponse<SettingsData>(settings);
+    return successResponse<ProgramSettings>(settings);
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : String(err);
     console.error('[getSettingsAction] Exception:', errorMsg);
@@ -70,7 +64,7 @@ export async function getSettingsAction(): Promise<ApiResponse<SettingsData>> {
  * 4. Log action to audit_logs
  * 5. Return updated settings
  */
-export async function updateSettingsAction(input: unknown): Promise<ApiResponse<SettingsData>> {
+export async function updateSettingsAction(input: unknown): Promise<ApiResponse<ProgramSettings>> {
   try {
     // Check admin role
     const supabase = createServerSupabase();
@@ -104,8 +98,8 @@ export async function updateSettingsAction(input: unknown): Promise<ApiResponse<
 
     const updates = validationResult.data;
 
-    // Update settings
-    await updateSettings(updates);
+    // Update settings with staffId for audit logging
+    await updateSettings(updates as any, authData.user.id);
 
     // Log action
     await logAction(authData.user.id, 'update_settings', {
@@ -115,7 +109,7 @@ export async function updateSettingsAction(input: unknown): Promise<ApiResponse<
     // Fetch and return updated settings
     const newSettings = await getSettings();
 
-    return successResponse<SettingsData>(newSettings);
+    return successResponse<ProgramSettings>(newSettings);
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : String(err);
     console.error('[updateSettingsAction] Exception:', errorMsg);

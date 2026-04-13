@@ -58,7 +58,7 @@ export const updateSettingsSchema = z.object({
   min_sale_amount: z.number().positive('Montant minimum doit être supérieur à 0').optional(),
   points_per_referral: z.number().int('Points doit être un entier').positive().optional(),
   voucher_value_euros: z.number().positive('Valeur bon doit être supérieure à 0').optional(),
-  points_for_voucher: z.number().int('Points doit être un entier').positive().optional(),
+  voucher_threshold: z.number().int('Points doit être un entier').positive().optional(),
 });
 
 export type UpdateSettingsInput = z.infer<typeof updateSettingsSchema>;
