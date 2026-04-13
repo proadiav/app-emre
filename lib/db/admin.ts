@@ -11,7 +11,7 @@ const DEFAULT_SETTINGS = {
   min_sale_amount: 30,
   points_per_referral: 1,
   voucher_value_euros: 20,
-  points_for_voucher: 5,
+  voucher_threshold: 5,
 } as const;
 
 /**
@@ -21,13 +21,13 @@ const DEFAULT_SETTINGS = {
 export async function getSettings(): Promise<
   Pick<
     ProgramSettings,
-    'min_sale_amount' | 'points_per_referral' | 'voucher_value_euros' | 'points_for_voucher'
+    'min_sale_amount' | 'points_per_referral' | 'voucher_value_euros' | 'voucher_threshold'
   >
 > {
   try {
     const { data, error } = await supabaseAdmin
       .from('program_settings')
-      .select('min_sale_amount, points_per_referral, voucher_value_euros, points_for_voucher')
+      .select('min_sale_amount, points_per_referral, voucher_value_euros, voucher_threshold')
       .eq('id', 1)
       .single();
 
@@ -48,7 +48,7 @@ export async function getSettings(): Promise<
       min_sale_amount: data.min_sale_amount,
       points_per_referral: data.points_per_referral,
       voucher_value_euros: data.voucher_value_euros,
-      points_for_voucher: data.points_for_voucher,
+      voucher_threshold: data.voucher_threshold,
     };
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : String(err);
@@ -66,7 +66,7 @@ export async function updateSettings(
   updates: Partial<
     Pick<
       ProgramSettings,
-      'min_sale_amount' | 'points_per_referral' | 'voucher_value_euros' | 'points_for_voucher'
+      'min_sale_amount' | 'points_per_referral' | 'voucher_value_euros' | 'voucher_threshold'
     >
   >
 ): Promise<void> {
@@ -99,7 +99,7 @@ export async function updateSettings(
         min_sale_amount: updates.min_sale_amount ?? DEFAULT_SETTINGS.min_sale_amount,
         points_per_referral: updates.points_per_referral ?? DEFAULT_SETTINGS.points_per_referral,
         voucher_value_euros: updates.voucher_value_euros ?? DEFAULT_SETTINGS.voucher_value_euros,
-        points_for_voucher: updates.points_for_voucher ?? DEFAULT_SETTINGS.points_for_voucher,
+        voucher_threshold: updates.voucher_threshold ?? DEFAULT_SETTINGS.voucher_threshold,
       });
 
       if (error) {
