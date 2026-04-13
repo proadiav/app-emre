@@ -103,7 +103,12 @@ describe('Admin Settings & Audit Logging', () => {
         .single();
 
       // Update only min_sale_amount
-      await updateSettings({ min_sale_amount: 40 });
+      await updateSettings({
+        min_sale_amount: 40,
+        points_per_referral: 1,
+        voucher_value_euros: 20,
+        voucher_threshold: 5,
+      }, testStaffId);
 
       const updated = await getSettings();
 
@@ -117,7 +122,9 @@ describe('Admin Settings & Audit Logging', () => {
       await updateSettings({
         min_sale_amount: 35,
         voucher_threshold: 6,
-      });
+        points_per_referral: 1,
+        voucher_value_euros: 20,
+      }, testStaffId);
 
       const settings = await getSettings();
 
@@ -130,8 +137,11 @@ describe('Admin Settings & Audit Logging', () => {
 
     it('should persist updates to database', async () => {
       await updateSettings({
+        min_sale_amount: 30,
+        points_per_referral: 1,
         voucher_value_euros: 30,
-      });
+        voucher_threshold: 5,
+      }, testStaffId);
 
       // Query database directly to verify persistence
       const { data } = await supabaseAdmin
