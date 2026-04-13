@@ -96,10 +96,20 @@ export async function updateSettingsAction(input: unknown): Promise<ApiResponse<
       return errorResponse(ErrorCodes.VALIDATION_ERROR, getErrorMessage(ErrorCodes.VALIDATION_ERROR));
     }
 
-    const updates = validationResult.data;
+    // Get current settings to provide defaults for partial updates
+    const currentSettings = await getSettings();
+    const validatedData = validationResult.data;
+    
+    // Properly type the updates object with all required fields
+    const updates: Parameters<typeof updateSettings>[0] = {
+      points_per_referral: validatedData.points_per_referral ?? currentSettings.points_per_referral,
+      voucher_threshold: validatedData.voucher_threshold ?? currentSettings.voucher_threshold,
+      min_sale_amount: validatedData.min_sale_amount ?? currentSettings.min_sale_amount,
+      voucher_value_euros: validatedData.voucher_value_euros ?? currentSettings.voucher_value_euros,
+    };
 
     // Update settings with staffId for audit logging
-    await updateSettings(updates as any, authData.user.id);
+    await updateSettings(updates, authData.user.id);
 
     // Log action
     await logAction(authData.user.id, 'update_settings', {

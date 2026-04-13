@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { supabaseAdmin } from '@/lib/supabase/admin';
-import { getSettings, updateSettings, getAuditLogs, countAuditLogs } from '@/lib/db/admin';
+import { getSettings, updateSettings } from '@/lib/db/settings';
+import { getAuditLogs, countAuditLogs } from '@/lib/db/admin';
 import { logAction } from '@/lib/utils/audit';
 
 /**
@@ -57,7 +58,7 @@ describe('Admin Settings & Audit Logging', () => {
         min_sale_amount: 30,
         points_per_referral: 1,
         voucher_value_euros: 20,
-        points_for_voucher: 5,
+        voucher_threshold: 5,
       });
     });
 
@@ -70,7 +71,7 @@ describe('Admin Settings & Audit Logging', () => {
           min_sale_amount: 50,
           points_per_referral: 2,
           voucher_value_euros: 25,
-          points_for_voucher: 4,
+          voucher_threshold: 4,
         })
         .select()
         .single();
@@ -81,7 +82,7 @@ describe('Admin Settings & Audit Logging', () => {
         min_sale_amount: 50,
         points_per_referral: 2,
         voucher_value_euros: 25,
-        points_for_voucher: 4,
+        voucher_threshold: 4,
       });
     });
   });
@@ -96,7 +97,7 @@ describe('Admin Settings & Audit Logging', () => {
           min_sale_amount: 30,
           points_per_referral: 1,
           voucher_value_euros: 20,
-          points_for_voucher: 5,
+          voucher_threshold: 5,
         })
         .select()
         .single();
@@ -109,19 +110,19 @@ describe('Admin Settings & Audit Logging', () => {
       expect(updated.min_sale_amount).toBe(40);
       expect(updated.points_per_referral).toBe(1);
       expect(updated.voucher_value_euros).toBe(20);
-      expect(updated.points_for_voucher).toBe(5);
+      expect(updated.voucher_threshold).toBe(5);
     });
 
     it('should create settings if none exist', async () => {
       await updateSettings({
         min_sale_amount: 35,
-        points_for_voucher: 6,
+        voucher_threshold: 6,
       });
 
       const settings = await getSettings();
 
       expect(settings.min_sale_amount).toBe(35);
-      expect(settings.points_for_voucher).toBe(6);
+      expect(settings.voucher_threshold).toBe(6);
       // Other fields should have defaults
       expect(settings.points_per_referral).toBe(1);
       expect(settings.voucher_value_euros).toBe(20);
