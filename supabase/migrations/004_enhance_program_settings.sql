@@ -17,14 +17,12 @@ ALTER TABLE program_settings
   ALTER COLUMN created_at TYPE TIMESTAMPTZ USING created_at AT TIME ZONE 'UTC',
   ALTER COLUMN updated_at TYPE TIMESTAMPTZ USING updated_at AT TIME ZONE 'UTC';
 
--- Convert id from BIGINT to UUID (PRIMARY KEY)
-ALTER TABLE program_settings
-  ALTER COLUMN id SET DATA TYPE uuid USING gen_random_uuid();
-
 -- Add audit trail columns
+-- NOTE: id remains BIGINT PRIMARY KEY with CHECK (id = 1) singleton pattern from 001_initial_schema.sql
+-- Do NOT convert to UUID - this would break the singleton constraint and destroy data
 ALTER TABLE program_settings
   ADD COLUMN version INT DEFAULT 1,
-  ADD COLUMN updated_by UUID;
+  ADD COLUMN updated_by UUID REFERENCES staff(id);
 
 -- Rename points_for_voucher to voucher_threshold
 ALTER TABLE program_settings
@@ -34,23 +32,33 @@ ALTER TABLE program_settings
 ALTER TABLE program_settings ENABLE ROW LEVEL SECURITY;
 
 -- Create improved RLS policies
--- Only authenticated users can SELECT
+-- Admin-only access: SELECT
 CREATE POLICY "program_settings_select_policy" ON program_settings
   FOR SELECT
-  USING (auth.uid() IS NOT NULL);
+  USING (
+    (SELECT role FROM staff WHERE id = auth.uid()) = 'admin'
+  );
 
--- Only authenticated admin users can UPDATE
+-- Admin-only access: UPDATE
 CREATE POLICY "program_settings_update_policy" ON program_settings
   FOR UPDATE
-  USING (auth.jwt() ->> 'role' = 'admin')
-  WITH CHECK (auth.jwt() ->> 'role' = 'admin');
+  USING (
+    (SELECT role FROM staff WHERE id = auth.uid()) = 'admin'
+  )
+  WITH CHECK (
+    (SELECT role FROM staff WHERE id = auth.uid()) = 'admin'
+  );
 
--- Only authenticated admin users can INSERT
+-- Admin-only access: INSERT
 CREATE POLICY "program_settings_insert_policy" ON program_settings
   FOR INSERT
-  WITH CHECK (auth.jwt() ->> 'role' = 'admin');
+  WITH CHECK (
+    (SELECT role FROM staff WHERE id = auth.uid()) = 'admin'
+  );
 
--- Only authenticated admin users can DELETE
+-- Admin-only access: DELETE
 CREATE POLICY "program_settings_delete_policy" ON program_settings
   FOR DELETE
-  USING (auth.jwt() ->> 'role' = 'admin');
+  USING (
+    (SELECT role FROM staff WHERE id = auth.uid()) = 'admin'
+  );
