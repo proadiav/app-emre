@@ -35,13 +35,50 @@ interface ExistsResponse {
   error: string | null;
 }
 
+// Customer fields needed for list display
+export type CustomerListItem = Pick<
+  Customer,
+  'id' | 'email' | 'phone' | 'first_name' | 'last_name' | 'email_verified' | 'referrer_id' | 'created_at'
+>;
+
+interface RecentCustomersResponse {
+  success: boolean;
+  customers: CustomerListItem[];
+  error: string | null;
+}
+
+/**
+ * Get most recent customers, ordered by creation date descending
+ */
+export async function getRecentCustomers(limit: number = 20): Promise<RecentCustomersResponse> {
+  try {
+    const supabase = await createServerSupabase();
+    const { data, error } = await supabase
+      .from('customers')
+      .select('id, email, phone, first_name, last_name, email_verified, referrer_id, created_at')
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      console.error('[getRecentCustomers] Database error:', error);
+      return { success: false, customers: [], error: 'Erreur lors de la récupération des clients' };
+    }
+
+    return { success: true, customers: (data || []) as CustomerListItem[], error: null };
+  } catch (err) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    console.error('[getRecentCustomers] Exception:', errorMsg);
+    return { success: false, customers: [], error: 'Erreur interne' };
+  }
+}
+
 /**
  * Search customers by email (normalized, case-insensitive)
  * Returns array of customers matching the email
  */
 export async function searchCustomersByEmail(email: string): Promise<CustomersListResponse> {
   try {
-    const supabase = createServerSupabase();
+    const supabase = await createServerSupabase();
     const normalizedEmail = normalizeEmail(email);
 
     const { data, error } = await supabase
@@ -80,7 +117,7 @@ export async function searchCustomersByEmail(email: string): Promise<CustomersLi
  */
 export async function searchCustomersByPhone(phone: string): Promise<CustomersListResponse> {
   try {
-    const supabase = createServerSupabase();
+    const supabase = await createServerSupabase();
 
     let normalizedPhone: string;
     try {
@@ -130,7 +167,7 @@ export async function searchCustomersByPhone(phone: string): Promise<CustomersLi
  */
 export async function getCustomerById(customerId: string): Promise<CustomerResponse> {
   try {
-    const supabase = createServerSupabase();
+    const supabase = await createServerSupabase();
     const { data, error } = await supabase
       .from('customers')
       .select('*')
@@ -177,7 +214,7 @@ export async function countValidatedReferralsForCustomer(
   customerId: string
 ): Promise<CountResponse> {
   try {
-    const supabase = createServerSupabase();
+    const supabase = await createServerSupabase();
     const { count, error } = await supabase
       .from('referrals')
       .select('*', { count: 'exact', head: true })
@@ -218,7 +255,7 @@ export async function checkCustomerExists(
   phone: string
 ): Promise<ExistsResponse> {
   try {
-    const supabase = createServerSupabase();
+    const supabase = await createServerSupabase();
 
     const normalizedEmail = normalizeEmail(email);
     let normalizedPhone: string;
@@ -277,7 +314,7 @@ export async function checkCustomerExists(
  * @deprecated Use searchCustomersByEmail() instead for standardized responses
  */
 export async function getCustomerByEmail(email: string) {
-  const supabase = createServerSupabase();
+  const supabase = await createServerSupabase();
   const normalizedEmail = normalizeEmail(email);
   const { data, error } = await supabase
     .from('customers')
@@ -297,7 +334,7 @@ export async function getCustomerByEmail(email: string) {
  * @deprecated Use searchCustomersByPhone() instead for standardized responses
  */
 export async function getCustomerByPhone(phone: string) {
-  const supabase = createServerSupabase();
+  const supabase = await createServerSupabase();
 
   let normalizedPhone: string;
   try {
