@@ -30,6 +30,9 @@ interface SearchCustomersData {
   first_name: string;
   last_name: string;
   phone: string;
+  email_verified: boolean;
+  referrer_id: string | null;
+  created_at: string;
 }
 
 interface GetCustomerFullData {
@@ -94,7 +97,7 @@ export async function createCustomer(input: unknown): Promise<ApiResponse<Create
       );
     }
 
-    const supabase = createServerSupabase();
+    const supabase = await createServerSupabase();
 
     // 4. Validate referrer if provided
     let referrerExists = false;
@@ -223,7 +226,7 @@ export async function searchCustomers(query: string): Promise<ApiResponse<Search
       return successResponse<SearchCustomersData[]>([]);
     }
 
-    const supabase = createServerSupabase();
+    const supabase = await createServerSupabase();
     let customers: SearchCustomersData[] = [];
 
     // 2. Determine search type and execute
@@ -232,7 +235,7 @@ export async function searchCustomers(query: string): Promise<ApiResponse<Search
       const normalizedEmail = normalizeEmail(trimmedQuery);
       const { data, error } = await supabase
         .from('customers')
-        .select('id, email, first_name, last_name, phone')
+        .select('id, email, first_name, last_name, phone, email_verified, referrer_id, created_at')
         .ilike('email', `%${normalizedEmail}%`)
         .limit(10);
 
@@ -248,7 +251,7 @@ export async function searchCustomers(query: string): Promise<ApiResponse<Search
         const normalizedPhone = normalizePhone(trimmedQuery);
         const { data, error } = await supabase
           .from('customers')
-          .select('id, email, first_name, last_name, phone')
+          .select('id, email, first_name, last_name, phone, email_verified, referrer_id, created_at')
           .eq('phone', normalizedPhone)
           .limit(10);
 
@@ -259,7 +262,7 @@ export async function searchCustomers(query: string): Promise<ApiResponse<Search
           const digits = trimmedQuery.replace(/[\s\-\.]/g, '');
           const { data: partialData, error: partialError } = await supabase
             .from('customers')
-            .select('id, email, first_name, last_name, phone')
+            .select('id, email, first_name, last_name, phone, email_verified, referrer_id, created_at')
             .ilike('phone', `%${digits}%`)
             .limit(10);
 
@@ -274,7 +277,7 @@ export async function searchCustomers(query: string): Promise<ApiResponse<Search
         // If phone normalization fails, fall back to name search
         const { data, error } = await supabase
           .from('customers')
-          .select('id, email, first_name, last_name, phone')
+          .select('id, email, first_name, last_name, phone, email_verified, referrer_id, created_at')
           .or(`first_name.ilike.%${trimmedQuery}%,last_name.ilike.%${trimmedQuery}%`)
           .limit(10);
 
@@ -289,7 +292,7 @@ export async function searchCustomers(query: string): Promise<ApiResponse<Search
       // Search by name (first_name OR last_name)
       const { data, error } = await supabase
         .from('customers')
-        .select('id, email, first_name, last_name, phone')
+        .select('id, email, first_name, last_name, phone, email_verified, referrer_id, created_at')
         .or(`first_name.ilike.%${trimmedQuery}%,last_name.ilike.%${trimmedQuery}%`)
         .limit(10);
 
@@ -327,7 +330,7 @@ export async function getCustomer(customerId: string): Promise<ApiResponse<GetCu
       return errorResponse(ErrorCodes.VALIDATION_ERROR, 'ID client invalide');
     }
 
-    const supabase = createServerSupabase();
+    const supabase = await createServerSupabase();
 
     // 1. Get customer by ID
     const { data: customer, error: customerError } = await supabase
