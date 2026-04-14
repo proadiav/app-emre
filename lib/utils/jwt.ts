@@ -6,11 +6,12 @@
 import * as crypto from 'crypto';
 import { timingSafeEqual } from 'crypto';
 
-const SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-prod';
-
-// Validate JWT_SECRET configuration
-if (!process.env.JWT_SECRET && process.env.NODE_ENV === 'production') {
-  throw new Error('JWT_SECRET environment variable is required in production');
+function getSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret && process.env.NODE_ENV === 'production') {
+    throw new Error('JWT_SECRET environment variable is required in production');
+  }
+  return secret || 'dev-secret-change-in-prod';
 }
 
 if (!process.env.JWT_SECRET && process.env.NODE_ENV !== 'production') {
@@ -50,7 +51,7 @@ export function generateVerificationToken(customerId: string, expiryMs: number):
 
   // Create signature
   const signature = crypto
-    .createHmac('sha256', SECRET)
+    .createHmac('sha256', getSecret())
     .update(`${header}.${body}`)
     .digest('base64url');
 
@@ -75,7 +76,7 @@ export function verifyToken(token: string): { customerId: string; valid: boolean
 
     // Verify signature using timing-safe comparison
     const expectedSignature = crypto
-      .createHmac('sha256', SECRET)
+      .createHmac('sha256', getSecret())
       .update(`${header}.${body}`)
       .digest('base64url');
 
