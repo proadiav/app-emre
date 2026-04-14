@@ -46,7 +46,7 @@ export async function useVoucherAction(input: unknown): Promise<ApiResponse<UseV
 
     const { voucherId, saleId } = validationResult.data;
 
-    const supabase = createServerSupabase();
+    const supabase = await createServerSupabase();
 
     // 2. Get current auth user → extract staff_id
     const { data: authData, error: authError } = await supabase.auth.getUser();
@@ -94,41 +94,22 @@ export async function useVoucherAction(input: unknown): Promise<ApiResponse<UseV
       return rpcResult as unknown as ApiResponse<UseVoucherData>;
     }
 
-    // 7. If success AND voucher has referrer_id: send email
+    // 7. Fire-and-forget email notification (don't block the response)
     if (voucher.referrer_id) {
-      const referrerResult = await getCustomerById(voucher.referrer_id);
-
-      if (referrerResult.success && referrerResult.customer) {
-        const referrer = referrerResult.customer;
-
-        // Count validated referrals for remaining points
-        const countResult = await countValidatedReferralsForCustomer(voucher.referrer_id);
-
-        if (countResult.success) {
-          const remainingPoints = countResult.count;
-          const emailResult = await sendVoucherUsedEmail(
-            referrer.email,
-            referrer.first_name,
-            remainingPoints
-          );
-
-          if (!emailResult.success) {
-            console.warn('[useVoucherAction] Failed to send voucher used email:', emailResult.error);
-            // Don't fail the operation - voucher was used successfully
+      const referrerId = voucher.referrer_id;
+      (async () => {
+        try {
+          const referrerResult = await getCustomerById(referrerId);
+          if (!referrerResult.success || !referrerResult.customer) return;
+          const referrer = referrerResult.customer;
+          const countResult = await countValidatedReferralsForCustomer(referrerId);
+          if (countResult.success) {
+            await sendVoucherUsedEmail(referrer.email, referrer.first_name, countResult.count);
           }
-        } else {
-          console.warn('[useVoucherAction] Failed to count validated referrals:', {
-            referrerId: voucher.referrer_id,
-            error: countResult.error,
-          });
-          // Don't fail - referral count wasn't critical for voucher usage
+        } catch (err) {
+          console.warn('[useVoucherAction] Email notification error:', err);
         }
-      } else {
-        console.warn('[useVoucherAction] Failed to fetch referrer details:', {
-          referrerId: voucher.referrer_id,
-        });
-        // Don't fail - referrer data wasn't critical for voucher usage
-      }
+      })();
     }
 
     // 8. Return success response

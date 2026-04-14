@@ -50,7 +50,7 @@ export async function recordSale(input: unknown): Promise<ApiResponse<RecordSale
 
     const { customerId, amount } = validationResult.data;
 
-    const supabase = createServerSupabase();
+    const supabase = await createServerSupabase();
 
     // 2. Get current auth user → extract staff_id
     const { data: authData, error: authError } = await supabase.auth.getUser();
@@ -94,71 +94,29 @@ export async function recordSale(input: unknown): Promise<ApiResponse<RecordSale
 
     const { saleId, referralValidated, voucherCreated } = rpcData;
 
-    // 6. If referralValidated AND customer has referrer: send email
-    if (referralValidated && customer.referrer_id) {
-      const referrerResult = await getCustomerById(customer.referrer_id);
+    // 6 & 7. Fire-and-forget email notifications (don't block the response)
+    if (customer.referrer_id && (referralValidated || voucherCreated)) {
+      (async () => {
+        try {
+          const referrerResult = await getCustomerById(customer.referrer_id!);
+          if (!referrerResult.success || !referrerResult.customer) return;
+          const referrer = referrerResult.customer;
 
-      if (referrerResult.success && referrerResult.customer) {
-        const referrer = referrerResult.customer;
-        const emailResult = await sendReferralValidatedEmail(
-          referrer.email,
-          referrer.first_name,
-          customer.first_name,
-          amount,
-          1 // 1 point per validated referral
-        );
-
-        if (!emailResult.success) {
-          console.warn('[recordSale] Failed to send referral validated email:', emailResult.error);
-          // Don't fail the operation - sale was recorded successfully
-        }
-      } else {
-        console.warn('[recordSale] Failed to fetch referrer details:', {
-          referrerId: customer.referrer_id,
-        });
-        // Don't fail - referrer data wasn't critical for sale recording
-      }
-    }
-
-    // 7. If voucherCreated AND customer has referrer: send voucher email
-    if (voucherCreated && customer.referrer_id) {
-      const referrerResult = await getCustomerById(customer.referrer_id);
-
-      if (referrerResult.success && referrerResult.customer) {
-        const referrer = referrerResult.customer;
-
-        // Get new voucher (first available for referrer)
-        const vouchersResult = await getAvailableVouchersForReferrer(customer.referrer_id);
-
-        if (vouchersResult.success && vouchersResult.vouchers.length > 0) {
-          const newVoucher = vouchersResult.vouchers[0];
-          // Voucher code = first 8 chars of voucher ID, uppercase
-          const voucherCode = newVoucher.id.substring(0, 8).toUpperCase();
-          const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL}/vouchers`;
-
-          const emailResult = await sendVoucherAvailableEmail(
-            referrer.email,
-            referrer.first_name,
-            voucherCode,
-            dashboardUrl
-          );
-
-          if (!emailResult.success) {
-            console.warn('[recordSale] Failed to send voucher available email:', emailResult.error);
-            // Don't fail the operation - voucher was created successfully
+          if (referralValidated) {
+            await sendReferralValidatedEmail(referrer.email, referrer.first_name, customer.first_name, amount, 1);
           }
-        } else {
-          console.warn('[recordSale] Failed to fetch new voucher:', {
-            referrerId: customer.referrer_id,
-          });
-          // Don't fail - voucher data wasn't critical for sale recording
+
+          if (voucherCreated) {
+            const vouchersResult = await getAvailableVouchersForReferrer(customer.referrer_id!);
+            if (vouchersResult.success && vouchersResult.vouchers.length > 0) {
+              const voucherCode = vouchersResult.vouchers[0].id.substring(0, 8).toUpperCase();
+              await sendVoucherAvailableEmail(referrer.email, referrer.first_name, voucherCode, `${process.env.NEXT_PUBLIC_APP_URL}/vouchers`);
+            }
+          }
+        } catch (err) {
+          console.warn('[recordSale] Email notification error:', err);
         }
-      } else {
-        console.warn('[recordSale] Failed to fetch referrer details for voucher email:', {
-          referrerId: customer.referrer_id,
-        });
-        // Don't fail - referrer data wasn't critical for sale recording
-      }
+      })();
     }
 
     // 8. Return success response

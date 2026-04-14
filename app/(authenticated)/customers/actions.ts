@@ -165,18 +165,15 @@ export async function createCustomer(input: unknown): Promise<ApiResponse<Create
       // Continue anyway - customer is created, just token update failed
     }
 
-    // 7. Send verification email (non-blocking - log failures but don't fail operation)
+    // 7. Send verification email (fire-and-forget — don't await, don't block)
     const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verify-email?token=${actualToken}`;
-    const emailResult = await sendVerificationEmail(
+    sendVerificationEmail(
       normalizedEmail,
       `${firstName} ${lastName}`,
       verificationUrl
-    );
-
-    if (!emailResult.success) {
-      console.warn('[createCustomer] Failed to send verification email:', emailResult.error);
-      // Don't fail the operation - customer was created successfully
-    }
+    ).catch((err) => {
+      console.warn('[createCustomer] Failed to send verification email:', err);
+    });
 
     // 8. Create referral record if referrer was specified
     if (referrerId && referrerExists) {

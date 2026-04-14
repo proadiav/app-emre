@@ -1,9 +1,8 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
-export const createServerSupabase = () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const cookieStore = cookies() as any;
+export const createServerSupabase = async () => {
+  const cookieStore = await cookies();
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -13,19 +12,13 @@ export const createServerSupabase = () => {
         getAll() {
           return cookieStore.getAll();
         },
-        setAll(cookiesToSet: unknown[]) {
+        setAll(cookiesToSet: Array<{ name: string; value: string; options?: Record<string, unknown> }>) {
           try {
-            (cookiesToSet as Array<{ name: string; value: string; options?: unknown }>).forEach(
-              ({ name, value, options }) => {
-                cookieStore.set(
-                  name,
-                  value,
-                  options as Record<string, unknown> | undefined
-                );
-              }
-            );
-          } catch (error) {
-            console.error('[setAll] Error:', error);
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
+          } catch {
+            // Expected to fail in Server Components (read-only context)
           }
         },
       },
