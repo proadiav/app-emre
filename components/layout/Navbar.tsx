@@ -1,21 +1,10 @@
-import { createServerSupabase } from '@/lib/supabase/server';
-import { LogoutButton } from '@/components/auth/LogoutButton';
+import { NavbarClient } from '@/components/layout/NavbarClient';
 
-export async function Navbar() {
-  const supabase = createServerSupabase();
-  const { data: { session } } = await supabase.auth.getSession();
+interface NavbarProps {
+  userEmail: string;
+  role: 'admin' | 'vendeur';
+}
 
-  return (
-    <nav className="border-b border-gray-200 bg-white">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-        <h1 className="text-2xl font-bold text-gray-900">Programme Ambassadeur</h1>
-        {session && (
-          <div className="flex items-center gap-4">
-            <span className="text-gray-600">{session.user.email}</span>
-            <LogoutButton />
-          </div>
-        )}
-      </div>
-    </nav>
-  );
+export function Navbar({ userEmail, role }: NavbarProps) {
+  return <NavbarClient userEmail={userEmail} role={role} />;
 }
