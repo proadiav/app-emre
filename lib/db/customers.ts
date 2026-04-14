@@ -73,6 +73,33 @@ export async function getRecentCustomers(limit: number = 20): Promise<RecentCust
 }
 
 /**
+ * Get multiple customers by their IDs (batch fetch for display)
+ * Returns empty array if ids is empty or on error
+ */
+export async function getCustomersByIds(ids: string[]): Promise<CustomerListItem[]> {
+  if (ids.length === 0) return [];
+
+  try {
+    const supabase = await createServerSupabase();
+    const { data, error } = await supabase
+      .from('customers')
+      .select('id, email, phone, first_name, last_name, email_verified, referrer_id, created_at')
+      .in('id', ids);
+
+    if (error) {
+      console.error('[getCustomersByIds] Database error:', error);
+      return [];
+    }
+
+    return (data || []) as CustomerListItem[];
+  } catch (err) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    console.error('[getCustomersByIds] Exception:', errorMsg);
+    return [];
+  }
+}
+
+/**
  * Search customers by email (normalized, case-insensitive)
  * Returns array of customers matching the email
  */
