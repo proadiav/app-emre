@@ -1,6 +1,7 @@
 'use server';
 
 import { createServerSupabase } from '@/lib/supabase/server';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 import { createCustomerSchema } from '@/lib/validation/schemas';
 import {
   errorResponse,
@@ -10,8 +11,6 @@ import {
   ApiResponse,
 } from '@/lib/utils/errors';
 import { normalizeEmail, normalizePhone } from '@/lib/utils/normalize';
-import { generateVerificationToken } from '@/lib/utils/jwt';
-import { sendVerificationEmail } from '@/lib/email/send';
 import { checkCustomerExists, getCustomerById } from '@/lib/db/customers';
 import type { Database } from '@/lib/supabase/types';
 
@@ -97,8 +96,6 @@ export async function createCustomer(input: unknown): Promise<ApiResponse<Create
       );
     }
 
-    const supabase = await createServerSupabase();
-
     // 4. Validate referrer if provided
     let referrerExists = false;
     if (referrerId) {
@@ -123,12 +120,8 @@ export async function createCustomer(input: unknown): Promise<ApiResponse<Create
       referrerExists = true;
     }
 
-    // 5. Create customer with email_verified=false
-    // Generate temporary token (we'll generate the proper one after getting the customer ID)
-    const tempToken = generateVerificationToken('temp', 7 * 24 * 60 * 60 * 1000); // 7 days
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-
-    const { data: newCustomer, error: createError } = await supabase
+    // 5. Create customer (auto-verified: physical shop, vendor manages in-person)
+    const { data: newCustomer, error: createError } = await supabaseAdmin
       .from('customers')
       .insert({
         email: normalizedEmail,
@@ -136,9 +129,7 @@ export async function createCustomer(input: unknown): Promise<ApiResponse<Create
         first_name: firstName,
         last_name: lastName,
         referrer_id: referrerId || null,
-        email_verified: false,
-        email_verification_token: tempToken,
-        email_verification_token_expires: expiresAt,
+        email_verified: true,
       })
       .select()
       .single();
@@ -148,36 +139,9 @@ export async function createCustomer(input: unknown): Promise<ApiResponse<Create
       return errorResponse(ErrorCodes.UNKNOWN_ERROR, getErrorMessage(ErrorCodes.UNKNOWN_ERROR));
     }
 
-    // 6. Generate verification token with actual customer ID
-    const actualToken = generateVerificationToken(newCustomer.id, 7 * 24 * 60 * 60 * 1000);
-
-    // Update customer with actual token
-    const { error: updateTokenError } = await supabase
-      .from('customers')
-      .update({
-        email_verification_token: actualToken,
-        email_verification_token_expires: expiresAt,
-      })
-      .eq('id', newCustomer.id);
-
-    if (updateTokenError) {
-      console.error('[createCustomer] Failed to update verification token:', updateTokenError);
-      // Continue anyway - customer is created, just token update failed
-    }
-
-    // 7. Send verification email (fire-and-forget — don't await, don't block)
-    const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verify-email?token=${actualToken}`;
-    sendVerificationEmail(
-      normalizedEmail,
-      `${firstName} ${lastName}`,
-      verificationUrl
-    ).catch((err) => {
-      console.warn('[createCustomer] Failed to send verification email:', err);
-    });
-
-    // 8. Create referral record if referrer was specified
+    // 6. Create referral record if referrer was specified
     if (referrerId && referrerExists) {
-      const { error: referralError } = await supabase
+      const { error: referralError } = await supabaseAdmin
         .from('referrals')
         .insert({
           referrer_id: referrerId,
@@ -202,6 +166,44 @@ export async function createCustomer(input: unknown): Promise<ApiResponse<Create
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
     console.error('[createCustomer] Unexpected error:', errorMsg, error);
+    return errorResponse(ErrorCodes.UNKNOWN_ERROR, getErrorMessage(ErrorCodes.UNKNOWN_ERROR));
+  }
+}
+
+/**
+ * Server Action: Delete a customer and all related data
+ *
+ * Cascades: sales, referrals (as referrer AND referee), vouchers.
+ * Use with caution — admin-only in UI.
+ */
+export async function deleteCustomer(customerId: string): Promise<ApiResponse<{ id: string }>> {
+  try {
+    if (!customerId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(customerId)) {
+      return errorResponse(ErrorCodes.VALIDATION_ERROR, 'ID client invalide');
+    }
+
+    // Delete dependent rows first (no ON DELETE CASCADE guaranteed across tables)
+    await supabaseAdmin.from('vouchers').delete().eq('referrer_id', customerId);
+    await supabaseAdmin.from('sales').delete().eq('customer_id', customerId);
+    await supabaseAdmin.from('referrals').delete().or(`referrer_id.eq.${customerId},referee_id.eq.${customerId}`);
+
+    // Detach any customers who were referred by this one (set referrer_id = null)
+    await supabaseAdmin.from('customers').update({ referrer_id: null }).eq('referrer_id', customerId);
+
+    const { error: deleteError } = await supabaseAdmin
+      .from('customers')
+      .delete()
+      .eq('id', customerId);
+
+    if (deleteError) {
+      console.error('[deleteCustomer] Failed to delete customer:', deleteError);
+      return errorResponse(ErrorCodes.UNKNOWN_ERROR, getErrorMessage(ErrorCodes.UNKNOWN_ERROR));
+    }
+
+    return successResponse<{ id: string }>({ id: customerId });
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    console.error('[deleteCustomer] Unexpected error:', errorMsg);
     return errorResponse(ErrorCodes.UNKNOWN_ERROR, getErrorMessage(ErrorCodes.UNKNOWN_ERROR));
   }
 }

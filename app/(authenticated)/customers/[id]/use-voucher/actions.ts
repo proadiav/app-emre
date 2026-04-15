@@ -10,9 +10,7 @@ import {
   ApiResponse,
 } from '@/lib/utils/errors';
 import { getVoucherById } from '@/lib/db/vouchers';
-import { getCustomerById, countValidatedReferralsForCustomer } from '@/lib/db/customers';
 import { useVoucher as callUseVoucherRpc } from '@/lib/rpc/use-voucher';
-import { sendVoucherUsedEmail } from '@/lib/email/send';
 
 interface UseVoucherData {
   id: string;
@@ -94,23 +92,6 @@ export async function useVoucherAction(input: unknown): Promise<ApiResponse<UseV
       return rpcResult as unknown as ApiResponse<UseVoucherData>;
     }
 
-    // 7. Fire-and-forget email notification (don't block the response)
-    if (voucher.referrer_id) {
-      const referrerId = voucher.referrer_id;
-      (async () => {
-        try {
-          const referrerResult = await getCustomerById(referrerId);
-          if (!referrerResult.success || !referrerResult.customer) return;
-          const referrer = referrerResult.customer;
-          const countResult = await countValidatedReferralsForCustomer(referrerId);
-          if (countResult.success) {
-            await sendVoucherUsedEmail(referrer.email, referrer.first_name, countResult.count);
-          }
-        } catch (err) {
-          console.warn('[useVoucherAction] Email notification error:', err);
-        }
-      })();
-    }
 
     // 8. Return success response
     return successResponse<UseVoucherData>({

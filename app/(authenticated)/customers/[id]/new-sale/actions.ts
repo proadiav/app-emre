@@ -10,9 +10,7 @@ import {
   ApiResponse,
 } from '@/lib/utils/errors';
 import { getCustomerById } from '@/lib/db/customers';
-import { getAvailableVouchersForReferrer } from '@/lib/db/vouchers';
 import { recordSaleWithPoints } from '@/lib/rpc/record-sale';
-import { sendReferralValidatedEmail, sendVoucherAvailableEmail } from '@/lib/email/send';
 
 interface RecordSaleData {
   id: string;
@@ -72,8 +70,6 @@ export async function recordSale(input: unknown): Promise<ApiResponse<RecordSale
       );
     }
 
-    const customer = customerResult.customer;
-
     // 4. Call RPC recordSaleWithPoints
     const rpcResult = await recordSaleWithPoints(customerId, amount, staffId);
 
@@ -94,30 +90,6 @@ export async function recordSale(input: unknown): Promise<ApiResponse<RecordSale
 
     const { saleId, referralValidated, voucherCreated } = rpcData;
 
-    // 6 & 7. Fire-and-forget email notifications (don't block the response)
-    if (customer.referrer_id && (referralValidated || voucherCreated)) {
-      (async () => {
-        try {
-          const referrerResult = await getCustomerById(customer.referrer_id!);
-          if (!referrerResult.success || !referrerResult.customer) return;
-          const referrer = referrerResult.customer;
-
-          if (referralValidated) {
-            await sendReferralValidatedEmail(referrer.email, referrer.first_name, customer.first_name, amount, 1);
-          }
-
-          if (voucherCreated) {
-            const vouchersResult = await getAvailableVouchersForReferrer(customer.referrer_id!);
-            if (vouchersResult.success && vouchersResult.vouchers.length > 0) {
-              const voucherCode = vouchersResult.vouchers[0].id.substring(0, 8).toUpperCase();
-              await sendVoucherAvailableEmail(referrer.email, referrer.first_name, voucherCode, `${process.env.NEXT_PUBLIC_APP_URL}/vouchers`);
-            }
-          }
-        } catch (err) {
-          console.warn('[recordSale] Email notification error:', err);
-        }
-      })();
-    }
 
     // 8. Return success response
     return successResponse<RecordSaleData>({

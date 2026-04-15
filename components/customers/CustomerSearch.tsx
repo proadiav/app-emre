@@ -104,9 +104,6 @@ export function CustomerSearch({ initialCustomers }: CustomerSearchProps) {
                   Téléphone
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">
-                  Email vérifié
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">
                   Parrain
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">
@@ -129,17 +126,6 @@ export function CustomerSearch({ initialCustomers }: CustomerSearchProps) {
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
                     {customer.phone}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-sm">
-                    {customer.email_verified ? (
-                      <span className="inline-flex rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
-                        Vérifié
-                      </span>
-                    ) : (
-                      <span className="inline-flex rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-700">
-                        En attente
-                      </span>
-                    )}
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-sm">
                     {customer.referrer_id && (

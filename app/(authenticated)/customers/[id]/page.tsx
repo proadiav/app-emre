@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getCustomer } from '@/app/(authenticated)/customers/actions';
 import { getCustomerById, getCustomersByIds } from '@/lib/db/customers';
+import { createServerSupabase } from '@/lib/supabase/server';
+import { DeleteCustomerButton } from '@/components/customers/DeleteCustomerButton';
 
 const dateFormatter = new Intl.DateTimeFormat('fr-FR', {
   day: '2-digit',
@@ -29,6 +31,15 @@ export default async function CustomerDetailPage({
   }
 
   const { customer, sales, referralsAsReferrer, vouchers } = response.data;
+
+  // Check if current user is admin (for delete button visibility)
+  const supabase = await createServerSupabase();
+  const { data: { user } } = await supabase.auth.getUser();
+  let isAdmin = false;
+  if (user) {
+    const { data: staff } = await supabase.from('staff').select('role').eq('id', user.id).single();
+    isAdmin = staff?.role === 'admin';
+  }
 
   // Fetch referrer name if customer has a referrer
   let referrerName: string | null = null;
@@ -79,6 +90,12 @@ export default async function CustomerDetailPage({
               Utiliser un bon
             </Link>
           )}
+          {isAdmin && (
+            <DeleteCustomerButton
+              customerId={id}
+              customerName={`${customer.first_name} ${customer.last_name}`}
+            />
+          )}
         </div>
       </div>
 
@@ -93,18 +110,6 @@ export default async function CustomerDetailPage({
           <div>
             <span className="text-gray-500">Téléphone : </span>
             <span className="text-gray-900">{customer.phone}</span>
-          </div>
-          <div>
-            <span className="text-gray-500">Email vérifié : </span>
-            {customer.email_verified ? (
-              <span className="inline-flex rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
-                Vérifié
-              </span>
-            ) : (
-              <span className="inline-flex rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-700">
-                En attente
-              </span>
-            )}
           </div>
           <div>
             <span className="text-gray-500">Créé le : </span>
