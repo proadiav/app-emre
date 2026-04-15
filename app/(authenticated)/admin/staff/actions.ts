@@ -28,7 +28,7 @@ interface StaffData {
 export async function listStaffAction(): Promise<ApiResponse<StaffData[]>> {
   try {
     // Check admin role
-    const supabase = createServerSupabase();
+    const supabase = await createServerSupabase();
     const { data: authData, error: authError } = await supabase.auth.getUser();
 
     if (authError || !authData.user) {
@@ -82,7 +82,7 @@ export async function listStaffAction(): Promise<ApiResponse<StaffData[]>> {
 export async function createStaffAction(input: unknown): Promise<ApiResponse<StaffData>> {
   try {
     // Check admin role
-    const supabase = createServerSupabase();
+    const supabase = await createServerSupabase();
     const { data: authData, error: authError } = await supabase.auth.getUser();
 
     if (authError || !authData.user) {
@@ -152,7 +152,7 @@ export async function createStaffAction(input: unknown): Promise<ApiResponse<Sta
 export async function updateStaffAction(id: string, input: unknown): Promise<ApiResponse<StaffData>> {
   try {
     // Check admin role
-    const supabase = createServerSupabase();
+    const supabase = await createServerSupabase();
     const { data: authData, error: authError } = await supabase.auth.getUser();
 
     if (authError || !authData.user) {
@@ -220,7 +220,7 @@ export async function updateStaffAction(id: string, input: unknown): Promise<Api
 export async function deleteStaffAction(id: string): Promise<ApiResponse<{ success: boolean }>> {
   try {
     // Check admin role
-    const supabase = createServerSupabase();
+    const supabase = await createServerSupabase();
     const { data: authData, error: authError } = await supabase.auth.getUser();
 
     if (authError || !authData.user) {

@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { signIn } from '@/app/login/actions';
 
 export function LoginForm() {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -16,12 +18,15 @@ export function LoginForm() {
 
     try {
       const result = await signIn(email, password);
-      if (!result.success && result.error) {
+      if (result.success) {
+        router.push('/dashboard');
+        return;
+      }
+      if (result.error) {
         setError(result.error.message);
       }
-    } catch (err) {
+    } catch {
       setError('Une erreur est survenue');
-      console.error('Login error:', err);
     } finally {
       setIsLoading(false);
     }

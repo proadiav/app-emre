@@ -39,7 +39,7 @@ export async function getAvailableVouchersForReferrer(
   referrerId: string
 ): Promise<VouchersListResponse> {
   try {
-    const supabase = createServerSupabase();
+    const supabase = await createServerSupabase();
 
     const { data, error } = await supabase
       .from('vouchers')
@@ -87,7 +87,7 @@ export async function getUsedVouchersForReferrer(
   referrerId: string
 ): Promise<VouchersListResponse> {
   try {
-    const supabase = createServerSupabase();
+    const supabase = await createServerSupabase();
 
     const { data, error } = await supabase
       .from('vouchers')
@@ -134,7 +134,7 @@ export async function getUsedVouchersForReferrer(
  */
 export async function getAllVouchers(): Promise<VouchersWithReferrerListResponse> {
   try {
-    const supabase = createServerSupabase();
+    const supabase = await createServerSupabase();
 
     const { data, error } = await supabase
       .from('vouchers')
@@ -171,7 +171,7 @@ export async function getAllVouchers(): Promise<VouchersWithReferrerListResponse
  */
 export async function getVoucherById(voucherId: string): Promise<VoucherResponse> {
   try {
-    const supabase = createServerSupabase();
+    const supabase = await createServerSupabase();
 
     const { data, error } = await supabase
       .from('vouchers')

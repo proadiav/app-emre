@@ -6,8 +6,8 @@ CREATE TABLE staff (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email VARCHAR(255) UNIQUE NOT NULL,
   role TEXT NOT NULL CHECK (role IN ('admin', 'vendeur')),
-  created_at TIMESTAMP DEFAULT NOW() AT TIME ZONE 'UTC',
-  updated_at TIMESTAMP DEFAULT NOW() AT TIME ZONE 'UTC'
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE INDEX idx_staff_email ON staff(email);
@@ -19,12 +19,12 @@ CREATE TABLE customers (
   phone VARCHAR(20) UNIQUE NOT NULL,
   first_name VARCHAR(100) NOT NULL,
   last_name VARCHAR(100) NOT NULL,
-  referrer_id UUID REFERENCES customers(id) NULLABLE,
+  referrer_id UUID REFERENCES customers(id),
   email_verified BOOLEAN DEFAULT FALSE,
-  email_verification_token VARCHAR(255) UNIQUE NULLABLE,
-  email_verification_token_expires TIMESTAMP NULLABLE,
-  created_at TIMESTAMP DEFAULT NOW() AT TIME ZONE 'UTC',
-  updated_at TIMESTAMP DEFAULT NOW() AT TIME ZONE 'UTC',
+  email_verification_token VARCHAR(255) UNIQUE,
+  email_verification_token_expires TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
 
   CHECK (email != '' AND phone != ''),
   CHECK (referrer_id IS DISTINCT FROM id)
@@ -39,7 +39,7 @@ CREATE TABLE sales (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   customer_id UUID NOT NULL REFERENCES customers(id),
   amount DECIMAL(10, 2) NOT NULL,
-  created_at TIMESTAMP DEFAULT NOW() AT TIME ZONE 'UTC',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
 
   CHECK (amount > 0)
 );
@@ -53,10 +53,10 @@ CREATE TABLE referrals (
   referrer_id UUID NOT NULL REFERENCES customers(id),
   referee_id UUID NOT NULL REFERENCES customers(id),
   status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'validated')),
-  validated_at TIMESTAMP NULLABLE,
-  sale_id UUID REFERENCES sales(id) NULLABLE,
+  validated_at TIMESTAMPTZ,
+  sale_id UUID REFERENCES sales(id) ,
   points_awarded INTEGER DEFAULT 0,
-  created_at TIMESTAMP DEFAULT NOW() AT TIME ZONE 'UTC',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
 
   UNIQUE (referrer_id, referee_id),
   CHECK (referrer_id != referee_id),
@@ -73,9 +73,9 @@ CREATE TABLE vouchers (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   referrer_id UUID NOT NULL REFERENCES customers(id),
   status TEXT DEFAULT 'available' CHECK (status IN ('available', 'used', 'expired')),
-  used_at TIMESTAMP NULLABLE,
-  used_in_sale_id UUID REFERENCES sales(id) NULLABLE,
-  created_at TIMESTAMP DEFAULT NOW() AT TIME ZONE 'UTC',
+  used_at TIMESTAMPTZ,
+  used_in_sale_id UUID REFERENCES sales(id) ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
 
   CHECK (status = 'available' OR used_at IS NOT NULL),
   CHECK (status != 'used' OR used_in_sale_id IS NOT NULL)
@@ -91,8 +91,8 @@ CREATE TABLE program_settings (
   points_per_referral INTEGER NOT NULL DEFAULT 1,
   voucher_value_euros INTEGER NOT NULL DEFAULT 20,
   points_for_voucher INTEGER NOT NULL DEFAULT 5,
-  created_at TIMESTAMP DEFAULT NOW() AT TIME ZONE 'UTC',
-  updated_at TIMESTAMP DEFAULT NOW() AT TIME ZONE 'UTC'
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Audit logs table
@@ -100,8 +100,8 @@ CREATE TABLE audit_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   staff_id UUID NOT NULL REFERENCES staff(id),
   action VARCHAR(100) NOT NULL,
-  details JSONB NULLABLE,
-  created_at TIMESTAMP DEFAULT NOW() AT TIME ZONE 'UTC'
+  details JSONB ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE INDEX idx_audit_logs_staff_id ON audit_logs(staff_id);

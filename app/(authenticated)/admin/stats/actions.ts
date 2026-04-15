@@ -45,7 +45,7 @@ interface StatisticsData {
 export async function getStatisticsAction(): Promise<ApiResponse<StatisticsData>> {
   try {
     // Check admin role
-    const supabase = createServerSupabase();
+    const supabase = await createServerSupabase();
     const { data: authData, error: authError } = await supabase.auth.getUser();
 
     if (authError || !authData.user) {
@@ -129,7 +129,7 @@ export async function getStatisticsAction(): Promise<ApiResponse<StatisticsData>
 export async function exportStatsAsCSVAction(): Promise<ApiResponse<string>> {
   try {
     // Check admin role
-    const supabase = createServerSupabase();
+    const supabase = await createServerSupabase();
     const { data: authData, error: authError } = await supabase.auth.getUser();
 
     if (authError || !authData.user) {

@@ -21,7 +21,7 @@ import { logAction } from '@/lib/utils/audit';
 export async function getSettingsAction(): Promise<ApiResponse<ProgramSettings>> {
   try {
     // Check admin role
-    const supabase = createServerSupabase();
+    const supabase = await createServerSupabase();
     const { data: authData, error: authError } = await supabase.auth.getUser();
 
     if (authError || !authData.user) {
@@ -67,7 +67,7 @@ export async function getSettingsAction(): Promise<ApiResponse<ProgramSettings>>
 export async function updateSettingsAction(input: unknown): Promise<ApiResponse<ProgramSettings>> {
   try {
     // Check admin role
-    const supabase = createServerSupabase();
+    const supabase = await createServerSupabase();
     const { data: authData, error: authError } = await supabase.auth.getUser();
 
     if (authError || !authData.user) {

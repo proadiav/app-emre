@@ -1,10 +1,9 @@
 import { type NextRequest, NextResponse } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
-import * as jose from 'jose';
-import { timingSafeEqual } from 'crypto';
 
 /**
- * Middleware to validate JWT token on protected routes and enforce admin role on /admin routes
+ * Middleware to validate session on protected routes and enforce admin role on /admin routes
  */
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -17,30 +16,39 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check if user is authenticated by looking for token in cookies
-  const token = request.cookies.get('sb-access-token')?.value;
+  // Create Supabase client for middleware (handles cookie-based auth)
+  let response = NextResponse.next({
+    request: { headers: request.headers },
+  });
 
-  if (!token && !isPublicRoute) {
-    // Redirect to login if trying to access protected route
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            request.cookies.set(name, value);
+            response.cookies.set(name, value, options);
+          });
+        },
+      },
+    }
+  );
+
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
     const loginUrl = new URL('/login', request.url);
     return NextResponse.redirect(loginUrl);
   }
 
   // Check admin routes require admin role
-  if (pathname.startsWith('/admin') && token) {
+  if (pathname.startsWith('/admin')) {
     try {
-      const secret = new TextEncoder().encode(process.env.SUPABASE_JWT_SECRET!);
-
-      // Decode JWT to get user ID
-      const decoded = await jose.jwtVerify(token, secret);
-      const userId = decoded.payload.sub as string;
-
-      if (!userId) {
-        const loginUrl = new URL('/login', request.url);
-        return NextResponse.redirect(loginUrl);
-      }
-
-      // Check user's role in database using admin client
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
       const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -60,46 +68,33 @@ export async function middleware(request: NextRequest) {
       const { data: staff, error } = await adminClient
         .from('staff')
         .select('role')
-        .eq('id', userId)
+        .eq('id', user.id)
         .single();
 
       if (error || !staff) {
-        console.error('[middleware] Error verifying admin role - role check failed');
+        console.error('[middleware] Error verifying admin role:', error?.message, 'staff:', staff, 'userId:', user.id);
         const loginUrl = new URL('/login', request.url);
         return NextResponse.redirect(loginUrl);
       }
 
-      // Only allow access if role is 'admin' using timing-safe comparison
-      // Pad both buffers to max possible role length (7 bytes for 'vendeur')
-      // to handle variable-length role strings (admin: 5 bytes, vendeur: 7 bytes)
-      const adminRole = Buffer.alloc(7);
-      adminRole.write('admin');
-      const userRole = Buffer.alloc(7);
-      userRole.write(staff.role);
+      console.log('[middleware] Staff role check:', staff.role, 'for user:', user.id);
 
-      if (!timingSafeEqual(userRole, adminRole)) {
+      if (staff.role !== 'admin') {
         const dashboardUrl = new URL('/dashboard', request.url);
         return NextResponse.redirect(dashboardUrl);
       }
     } catch (error) {
-      console.error('[middleware] Error verifying admin role - JWT validation failed');
+      console.error('[middleware] Error verifying admin role:', error);
       const loginUrl = new URL('/login', request.url);
       return NextResponse.redirect(loginUrl);
     }
   }
 
-  return NextResponse.next();
+  return response;
 }
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     */
     '/((?!_next/static|_next/image|favicon.ico|public).*)',
   ],
 };

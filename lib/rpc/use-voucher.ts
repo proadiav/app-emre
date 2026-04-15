@@ -12,7 +12,7 @@ export async function useVoucher(
   staffId: string
 ): Promise<ApiResponse> {
   try {
-    const supabase = createServerSupabase();
+    const supabase = await createServerSupabase();
 
     const { data, error } = await supabase.rpc('use_voucher', {
       p_voucher_id: voucherId,

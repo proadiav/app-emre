@@ -4,10 +4,10 @@ import { LoginForm } from '@/components/auth/LoginForm';
 
 export default async function LoginPage() {
   // If already logged in, redirect to dashboard
-  const supabase = createServerSupabase();
-  const { data: { session } } = await supabase.auth.getSession();
+  const supabase = await createServerSupabase();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (session) {
+  if (user) {
     redirect('/dashboard');
   }
 

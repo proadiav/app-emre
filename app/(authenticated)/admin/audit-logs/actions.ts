@@ -44,7 +44,7 @@ export async function getAuditLogsAction(
 ): Promise<ApiResponse<AuditLogsData>> {
   try {
     // Check admin role
-    const supabase = createServerSupabase();
+    const supabase = await createServerSupabase();
     const { data: authData, error: authError } = await supabase.auth.getUser();
 
     if (authError || !authData.user) {
@@ -95,7 +95,7 @@ export async function getAuditLogsAction(
 export async function countAuditLogsAction(): Promise<ApiResponse<number>> {
   try {
     // Check admin role
-    const supabase = createServerSupabase();
+    const supabase = await createServerSupabase();
     const { data: authData, error: authError } = await supabase.auth.getUser();
 
     if (authError || !authData.user) {

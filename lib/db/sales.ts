@@ -4,7 +4,7 @@ import { createServerSupabase } from '@/lib/supabase/server';
  * Get sale by ID
  */
 export async function getSaleById(saleId: string) {
-  const supabase = createServerSupabase();
+  const supabase = await createServerSupabase();
   const { data, error } = await supabase
     .from('sales')
     .select('*')
@@ -23,7 +23,7 @@ export async function getSaleById(saleId: string) {
  * Get all sales for customer
  */
 export async function getSalesByCustomerId(customerId: string) {
-  const supabase = createServerSupabase();
+  const supabase = await createServerSupabase();
   const { data, error } = await supabase
     .from('sales')
     .select('*')

@@ -4,7 +4,7 @@ import { createServerSupabase } from '@/lib/supabase/server';
  * Get referral by ID
  */
 export async function getReferralById(referralId: string) {
-  const supabase = createServerSupabase();
+  const supabase = await createServerSupabase();
   const { data, error } = await supabase
     .from('referrals')
     .select('*')
@@ -23,7 +23,7 @@ export async function getReferralById(referralId: string) {
  * Get all referrals for referrer (as person who referred others)
  */
 export async function getReferralsByReferrerId(referrerId: string) {
-  const supabase = createServerSupabase();
+  const supabase = await createServerSupabase();
   const { data, error } = await supabase
     .from('referrals')
     .select('*')
@@ -42,7 +42,7 @@ export async function getReferralsByReferrerId(referrerId: string) {
  * Count validated referrals for referrer
  */
 export async function countValidatedReferrals(referrerId: string) {
-  const supabase = createServerSupabase();
+  const supabase = await createServerSupabase();
   const { count, error } = await supabase
     .from('referrals')
     .select('*', { count: 'exact', head: true })
