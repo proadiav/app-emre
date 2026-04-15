@@ -18,7 +18,7 @@ export async function recordSaleWithPoints(
   staffId: string
 ): Promise<ApiResponse<RecordSaleResult>> {
   try {
-    const supabase = createServerSupabase();
+    const supabase = await createServerSupabase();
 
     const { data, error } = await supabase.rpc('record_sale_with_points', {
       p_customer_id: customerId,
@@ -42,6 +42,7 @@ export async function recordSaleWithPoints(
 
     // RPC returned error_code
     if (result.error_code) {
+      console.error('[recordSaleWithPoints] RPC error_code:', result.error_code);
       const message = getErrorMessage(result.error_code);
       const response = errorResponse(result.error_code, message);
       return response as unknown as ApiResponse<RecordSaleResult>;
