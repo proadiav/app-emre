@@ -5,13 +5,13 @@ import { ProgramSettingsForm } from '@/components/admin/ProgramSettingsForm';
 import { getSettingsAction } from './actions';
 import type { ProgramSettings } from '@/lib/db/settings';
 import type { ApiResponse } from '@/lib/utils/errors';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState<ProgramSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch settings on mount
   useEffect(() => {
     async function fetchSettings() {
       setLoading(true);
@@ -36,8 +36,8 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold text-gray-900">Paramètres</h1>
-        <p className="text-gray-600">Chargement...</p>
+        <h1 className="text-2xl font-semibold text-foreground">Paramètres</h1>
+        <p className="text-muted-foreground">Chargement...</p>
       </div>
     );
   }
@@ -45,26 +45,23 @@ export default function SettingsPage() {
   if (!settings) {
     return (
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold text-gray-900">Paramètres</h1>
-        <p className="text-red-600">Impossible de charger les paramètres</p>
+        <h1 className="text-2xl font-semibold text-foreground">Paramètres</h1>
+        <p className="text-destructive">Impossible de charger les paramètres</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-gray-900">Paramètres du programme</h1>
+      <h1 className="text-2xl font-semibold text-foreground">Paramètres du programme</h1>
 
       {error && (
-        <div className="rounded-lg bg-red-50 p-4">
-          <p className="text-red-900">{error}</p>
-        </div>
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
-      <ProgramSettingsForm
-        initialSettings={settings}
-        onSuccess={setSettings}
-      />
+      <ProgramSettingsForm initialSettings={settings} onSuccess={setSettings} />
     </div>
   );
 }
