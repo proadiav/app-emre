@@ -3,6 +3,16 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { searchCustomers } from '@/app/(authenticated)/customers/actions';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
 interface CustomerItem {
   id: string;
@@ -69,85 +79,69 @@ export function CustomerSearch({ initialCustomers }: CustomerSearchProps) {
 
   return (
     <div className="space-y-4">
-      {/* Search input */}
-      <input
+      <Input
         type="text"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Rechercher par nom, email ou téléphone..."
-        className="w-full rounded-md border border-gray-300 px-4 py-2 text-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
       />
 
       {isSearching && (
-        <p className="text-sm text-gray-500">Recherche en cours...</p>
+        <p className="text-sm text-muted-foreground">Recherche en cours...</p>
       )}
 
       {noResults && !isSearching && (
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-muted-foreground">
           Aucun client trouvé pour « {query} »
         </p>
       )}
 
-      {/* Customer table */}
       {displayedCustomers.length > 0 && (
-        <div className="overflow-x-auto rounded-lg border border-gray-200">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">
-                  Nom
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">
-                  Email
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">
-                  Téléphone
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">
-                  Parrain
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">
-                  Date
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
+        <div className="rounded-lg border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nom</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Téléphone</TableHead>
+                <TableHead>Parrain</TableHead>
+                <TableHead>Date</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {displayedCustomers.map((customer) => (
-                <tr
+                <TableRow
                   key={customer.id}
                   onClick={() => router.push(`/customers/${customer.id}`)}
-                  className="cursor-pointer transition-colors hover:bg-gray-50"
+                  className="cursor-pointer"
                 >
-                  <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-900">
+                  <TableCell className="font-medium">
                     {customer.first_name} {customer.last_name}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
                     {customer.email}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
                     {customer.phone}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-sm">
+                  </TableCell>
+                  <TableCell>
                     {customer.referrer_id && (
-                      <span className="inline-flex rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700">
-                        Oui
-                      </span>
+                      <Badge variant="points">Oui</Badge>
                     )}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
                     {dateFormatter.format(new Date(customer.created_at))}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       )}
 
-      {/* Empty state when no initial customers and no search */}
       {displayedCustomers.length === 0 && !isSearching && !noResults && (
-        <div className="rounded-lg border border-gray-200 bg-white p-8 text-center">
-          <p className="text-gray-500">Aucun client enregistré pour le moment.</p>
+        <div className="rounded-lg border bg-card p-8 text-center">
+          <p className="text-muted-foreground">Aucun client enregistré pour le moment.</p>
         </div>
       )}
     </div>
