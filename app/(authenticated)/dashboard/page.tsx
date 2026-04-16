@@ -5,6 +5,8 @@ import {
   getTotalSalesAmount,
   getTotalVouchersGenerated,
 } from '@/lib/db/stats';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('fr-FR', {
@@ -31,39 +33,34 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="mt-1 text-gray-600">Bienvenue sur le Programme Ambassadeur.</p>
+        <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Vue d&apos;ensemble du programme</p>
       </div>
 
-      {/* KPI Cards */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {kpis.map((kpi) => (
-          <div
-            key={kpi.label}
-            className="rounded-lg border border-gray-200 bg-white p-6"
-          >
-            <p className="text-sm font-medium text-gray-500">{kpi.label}</p>
-            <p className="mt-2 text-3xl font-bold text-gray-900">{kpi.value}</p>
-          </div>
+          <Card key={kpi.label}>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                {kpi.label}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-foreground">{kpi.value}</p>
+            </CardContent>
+          </Card>
         ))}
       </div>
 
-      {/* Actions rapides */}
       <div>
-        <h2 className="mb-4 text-lg font-semibold text-gray-900">Actions rapides</h2>
-        <div className="flex gap-4">
-          <Link
-            href="/customers/new"
-            className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 transition-colors"
-          >
-            + Nouveau client
-          </Link>
-          <Link
-            href="/customers"
-            className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-          >
-            Rechercher un client
-          </Link>
+        <h2 className="mb-4 text-lg font-semibold text-foreground">Actions rapides</h2>
+        <div className="flex gap-3">
+          <Button asChild>
+            <Link href="/customers/new">+ Nouveau client</Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link href="/customers">Rechercher un client</Link>
+          </Button>
         </div>
       </div>
     </div>
