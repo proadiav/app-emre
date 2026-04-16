@@ -1,16 +1,19 @@
 'use client';
 
 import { signOut } from '@/app/login/actions';
+import { Button } from '@/components/ui/button';
 
 export function LogoutButton() {
   return (
-    <button
+    <Button
+      variant="ghost"
+      size="sm"
       onClick={async () => {
         await signOut();
       }}
-      className="rounded-md bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+      className="text-[#9d9dab] hover:text-white hover:bg-white/10"
     >
       Déconnexion
-    </button>
+    </Button>
   );
 }

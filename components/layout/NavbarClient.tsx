@@ -2,8 +2,23 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
+import { Menu } from 'lucide-react';
 import { LogoutButton } from '@/components/auth/LogoutButton';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetTitle,
+} from '@/components/ui/sheet';
+import { Separator } from '@/components/ui/separator';
 
 interface NavbarClientProps {
   userEmail: string;
@@ -25,24 +40,7 @@ const ADMIN_LINKS = [
 
 export function NavbarClient({ userEmail, role }: NavbarClientProps) {
   const pathname = usePathname();
-  const [adminOpen, setAdminOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  // Close dropdown on outside click
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setAdminOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  // Close dropdown on navigation
-  useEffect(() => {
-    setAdminOpen(false);
-  }, [pathname]);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   function isActive(href: string) {
     if (href === '/dashboard') return pathname === '/dashboard';
@@ -50,22 +48,22 @@ export function NavbarClient({ userEmail, role }: NavbarClientProps) {
   }
 
   return (
-    <nav className="border-b border-gray-200 bg-white">
+    <nav className="bg-[#2c2c3a] border-b border-[#3e3e50]">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
-        {/* Left: Logo + nav links */}
+        {/* Left: Logo + nav links (desktop) */}
         <div className="flex items-center gap-6">
-          <Link href="/dashboard" className="text-lg font-bold text-gray-900">
+          <Link href="/dashboard" className="text-[15px] font-semibold text-[#d4b97a]">
             Programme Ambassadeur
           </Link>
-          <div className="flex items-center gap-1">
+          <div className="hidden md:flex items-center gap-1">
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                   isActive(link.href)
-                    ? 'bg-gray-100 text-gray-900'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    ? 'bg-[rgba(212,185,122,0.1)] text-[#e8e8ec]'
+                    : 'text-[#9d9dab] hover:bg-white/5 hover:text-[#e8e8ec]'
                 }`}
               >
                 {link.label}
@@ -74,50 +72,104 @@ export function NavbarClient({ userEmail, role }: NavbarClientProps) {
           </div>
         </div>
 
-        {/* Right: Admin dropdown + user + logout */}
-        <div className="flex items-center gap-3">
+        {/* Right: Admin dropdown + user + logout (desktop) */}
+        <div className="hidden md:flex items-center gap-3">
           {role === 'admin' && (
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={() => setAdminOpen(!adminOpen)}
-                className={`flex items-center gap-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                  pathname.startsWith('/admin')
-                    ? 'bg-purple-100 text-purple-700'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                }`}
-              >
-                Admin
-                <svg
-                  className={`h-4 w-4 transition-transform ${adminOpen ? 'rotate-180' : ''}`}
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={2}
-                  stroke="currentColor"
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={`text-sm font-medium ${
+                    pathname.startsWith('/admin')
+                      ? 'bg-[rgba(212,185,122,0.1)] text-[#e8e8ec]'
+                      : 'text-[#9d9dab] hover:bg-white/5 hover:text-[#e8e8ec]'
+                  }`}
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                </svg>
-              </button>
-              {adminOpen && (
-                <div className="absolute right-0 z-10 mt-1 w-48 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
-                  {ADMIN_LINKS.map((link) => (
+                  Admin
+                  <svg
+                    className="ml-1 h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={2}
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                  </svg>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                {ADMIN_LINKS.map((link) => (
+                  <DropdownMenuItem key={link.href} asChild>
                     <Link
-                      key={link.href}
                       href={link.href}
-                      className={`block px-4 py-2 text-sm transition-colors ${
-                        pathname.startsWith(link.href)
-                          ? 'bg-gray-100 text-gray-900'
-                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                      }`}
+                      className={isActive(link.href) ? 'bg-accent' : ''}
                     >
                       {link.label}
                     </Link>
-                  ))}
-                </div>
-              )}
-            </div>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
-          <span className="text-sm text-gray-500">{userEmail}</span>
+          <span className="text-xs text-[#9d9dab]">{userEmail}</span>
           <LogoutButton />
+        </div>
+
+        {/* Mobile: hamburger */}
+        <div className="md:hidden">
+          <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="sm" className="text-[#e8e8ec] hover:bg-white/10">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="bg-[#2c2c3a] border-[#3e3e50] w-72 p-0">
+              <SheetTitle className="px-5 pt-5 pb-3 text-[#d4b97a] text-base font-semibold">
+                Ambassadeur
+              </SheetTitle>
+              <div className="flex flex-col">
+                {NAV_LINKS.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setSheetOpen(false)}
+                    className={`px-5 py-3 text-sm transition-colors ${
+                      isActive(link.href)
+                        ? 'bg-[rgba(212,185,122,0.08)] text-[#e8e8ec]'
+                        : 'text-[#9d9dab] hover:bg-white/5 hover:text-[#e8e8ec]'
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+                {role === 'admin' && (
+                  <>
+                    <Separator className="bg-[#3e3e50] my-1" />
+                    {ADMIN_LINKS.map((link) => (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        onClick={() => setSheetOpen(false)}
+                        className={`px-5 py-3 text-sm transition-colors ${
+                          isActive(link.href)
+                            ? 'bg-[rgba(212,185,122,0.08)] text-[#e8e8ec]'
+                            : 'text-[#9d9dab] hover:bg-white/5 hover:text-[#e8e8ec]'
+                        }`}
+                      >
+                        {link.label}
+                      </Link>
+                    ))}
+                  </>
+                )}
+                <Separator className="bg-[#3e3e50] my-1" />
+                <div className="px-5 py-3">
+                  <p className="text-xs text-[#666]">{userEmail}</p>
+                  <LogoutButton />
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
     </nav>

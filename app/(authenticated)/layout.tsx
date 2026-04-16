@@ -31,7 +31,7 @@ export default async function AuthenticatedLayout({
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar userEmail={user.email ?? ''} role={role} />
-      <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-8">
+      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 md:px-6 md:py-8">
         {children}
       </main>
       <Footer />
