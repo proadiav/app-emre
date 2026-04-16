@@ -6,8 +6,12 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { createCustomer, searchCustomers } from '@/app/(authenticated)/customers/actions';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 
-// Client-side schema (referrerId managed separately)
 const formSchema = z.object({
   firstName: z.string().min(1, 'Prénom requis').max(100, 'Prénom trop long'),
   lastName: z.string().min(1, 'Nom requis').max(100, 'Nom trop long'),
@@ -29,7 +33,6 @@ export function CreateCustomerForm() {
   const [serverError, setServerError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Referrer search state
   const [hasReferrer, setHasReferrer] = useState(false);
   const [referrerQuery, setReferrerQuery] = useState('');
   const [referrerResults, setReferrerResults] = useState<ReferrerInfo[]>([]);
@@ -45,11 +48,8 @@ export function CreateCustomerForm() {
     resolver: zodResolver(formSchema),
   });
 
-  // Referrer search with debounce
   useEffect(() => {
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-    }
+    if (debounceRef.current) clearTimeout(debounceRef.current);
 
     if (referrerQuery.length < 2) {
       setReferrerResults([]);
@@ -76,9 +76,7 @@ export function CreateCustomerForm() {
     }, 300);
 
     return () => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
-      }
+      if (debounceRef.current) clearTimeout(debounceRef.current);
     };
   }, [referrerQuery]);
 
@@ -122,128 +120,90 @@ export function CreateCustomerForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      {/* Server error banner */}
       {serverError && (
-        <div className="rounded-md bg-red-50 p-4">
-          <p className="text-sm text-red-700">{serverError}</p>
-        </div>
+        <Alert variant="destructive">
+          <AlertDescription>{serverError}</AlertDescription>
+        </Alert>
       )}
 
-      {/* Name fields (2 columns) */}
       <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
-            Prénom
-          </label>
-          <input
-            id="firstName"
-            type="text"
-            {...register('firstName')}
-            placeholder="Prénom"
-            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
-          />
+        <div className="space-y-2">
+          <Label htmlFor="firstName">Prénom</Label>
+          <Input id="firstName" type="text" {...register('firstName')} placeholder="Prénom" />
           {errors.firstName && (
-            <p className="mt-1 text-sm text-red-600">{errors.firstName.message}</p>
+            <p className="text-sm text-destructive">{errors.firstName.message}</p>
           )}
         </div>
-        <div>
-          <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
-            Nom
-          </label>
-          <input
-            id="lastName"
-            type="text"
-            {...register('lastName')}
-            placeholder="Nom"
-            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
-          />
+        <div className="space-y-2">
+          <Label htmlFor="lastName">Nom</Label>
+          <Input id="lastName" type="text" {...register('lastName')} placeholder="Nom" />
           {errors.lastName && (
-            <p className="mt-1 text-sm text-red-600">{errors.lastName.message}</p>
+            <p className="text-sm text-destructive">{errors.lastName.message}</p>
           )}
         </div>
       </div>
 
-      {/* Email */}
-      <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-          Email
-        </label>
-        <input
-          id="email"
-          type="email"
-          {...register('email')}
-          placeholder="email@exemple.com"
-          className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
-        />
+      <div className="space-y-2">
+        <Label htmlFor="email">Email</Label>
+        <Input id="email" type="email" {...register('email')} placeholder="email@exemple.com" />
         {errors.email && (
-          <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+          <p className="text-sm text-destructive">{errors.email.message}</p>
         )}
       </div>
 
-      {/* Phone */}
-      <div>
-        <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
-          Téléphone
-        </label>
-        <input
-          id="phone"
-          type="tel"
-          {...register('phone')}
-          placeholder="06 12 34 56 78"
-          className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
-        />
+      <div className="space-y-2">
+        <Label htmlFor="phone">Téléphone</Label>
+        <Input id="phone" type="tel" {...register('phone')} placeholder="06 12 34 56 78" />
         {errors.phone && (
-          <p className="mt-1 text-sm text-red-600">{errors.phone.message}</p>
+          <p className="text-sm text-destructive">{errors.phone.message}</p>
         )}
       </div>
 
-      {/* Referrer section */}
       <div className="space-y-3">
         <label className="flex items-center gap-2">
           <input
             type="checkbox"
             checked={hasReferrer}
             onChange={(e) => handleToggleReferrer(e.target.checked)}
-            className="h-4 w-4 rounded border-gray-300"
+            className="h-4 w-4 rounded border-input"
           />
-          <span className="text-sm font-medium text-gray-700">Ce client a un parrain</span>
+          <span className="text-sm font-medium">Ce client a un parrain</span>
         </label>
 
         {hasReferrer && (
           <div className="ml-6 space-y-2">
             {selectedReferrer ? (
               <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-700">
+                <Badge variant="points" className="gap-1">
                   {selectedReferrer.first_name} {selectedReferrer.last_name} ({selectedReferrer.email})
                   <button
                     type="button"
                     onClick={handleRemoveReferrer}
-                    className="ml-1 text-blue-500 hover:text-blue-700"
+                    className="ml-1 hover:opacity-70"
                   >
                     ✕
                   </button>
-                </span>
+                </Badge>
               </div>
             ) : (
               <>
-                <input
+                <Input
                   type="text"
                   value={referrerQuery}
                   onChange={(e) => setReferrerQuery(e.target.value)}
                   placeholder="Rechercher le parrain par nom, email ou téléphone..."
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
                 />
                 {isSearchingReferrer && (
-                  <p className="text-xs text-gray-500">Recherche en cours...</p>
+                  <p className="text-xs text-muted-foreground">Recherche en cours...</p>
                 )}
                 {referrerResults.length > 0 && (
-                  <ul className="rounded-md border border-gray-200 bg-white">
+                  <ul className="rounded-md border bg-card">
                     {referrerResults.map((r) => (
                       <li key={r.id}>
                         <button
                           type="button"
                           onClick={() => handleSelectReferrer(r)}
-                          className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 transition-colors"
+                          className="w-full px-3 py-2 text-left text-sm hover:bg-accent/10 transition-colors"
                         >
                           {r.first_name} {r.last_name} — {r.email}
                         </button>
@@ -252,7 +212,7 @@ export function CreateCustomerForm() {
                   </ul>
                 )}
                 {referrerQuery.length >= 2 && !isSearchingReferrer && referrerResults.length === 0 && (
-                  <p className="text-xs text-gray-500">Aucun parrain trouvé</p>
+                  <p className="text-xs text-muted-foreground">Aucun parrain trouvé</p>
                 )}
               </>
             )}
@@ -260,21 +220,13 @@ export function CreateCustomerForm() {
         )}
       </div>
 
-      {/* Buttons */}
       <div className="flex gap-3">
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
+        <Button type="submit" disabled={isSubmitting}>
           {isSubmitting ? 'Création en cours...' : 'Créer le client'}
-        </button>
-        <a
-          href="/customers"
-          className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-        >
-          Annuler
-        </a>
+        </Button>
+        <Button variant="outline" asChild>
+          <a href="/customers">Annuler</a>
+        </Button>
       </div>
     </form>
   );
