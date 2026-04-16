@@ -4,6 +4,17 @@ import { useState, useEffect } from 'react';
 import { getAuditLogsAction } from './actions';
 import { ApiResponse } from '@/lib/utils/errors';
 import type { Database } from '@/lib/supabase/types';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
 type AuditLog = Database['public']['Tables']['audit_logs']['Row'];
 
@@ -22,7 +33,6 @@ export default function AuditLogsPage() {
 
   const limit = 50;
 
-  // Fetch audit logs
   useEffect(() => {
     async function fetchLogs() {
       setLoading(true);
@@ -47,8 +57,8 @@ export default function AuditLogsPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold text-gray-900">Journal d'audit</h1>
-        <p className="text-gray-600">Chargement...</p>
+        <h1 className="text-2xl font-semibold text-foreground">Journal d&apos;audit</h1>
+        <p className="text-muted-foreground">Chargement...</p>
       </div>
     );
   }
@@ -56,8 +66,8 @@ export default function AuditLogsPage() {
   if (!data) {
     return (
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold text-gray-900">Journal d'audit</h1>
-        <p className="text-red-600">Impossible de charger les logs d'audit</p>
+        <h1 className="text-2xl font-semibold text-foreground">Journal d&apos;audit</h1>
+        <p className="text-destructive">Impossible de charger les logs d&apos;audit</p>
       </div>
     );
   }
@@ -68,74 +78,74 @@ export default function AuditLogsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-gray-900">Journal d'audit</h1>
+      <h1 className="text-2xl font-semibold text-foreground">Journal d&apos;audit</h1>
 
       {error && (
-        <div className="rounded-lg bg-red-50 p-4">
-          <p className="text-red-900">{error}</p>
-        </div>
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
-      {/* Logs table */}
-      <div className="rounded-lg bg-white shadow">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="border-b border-gray-200 bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Date/Heure</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">ID Personnel</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Action</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Détails</th>
-              </tr>
-            </thead>
-            <tbody>
+      <Card>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Date/Heure</TableHead>
+                <TableHead>ID Personnel</TableHead>
+                <TableHead>Action</TableHead>
+                <TableHead>Détails</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {data.logs.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-6 py-4 text-center text-gray-600">
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center text-muted-foreground">
                     Aucun log disponible
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ) : (
                 data.logs.map((log) => (
-                  <tr key={log.id} className="border-b border-gray-200 hover:bg-gray-50">
-                    <td className="px-6 py-4 text-sm text-gray-900">
+                  <TableRow key={log.id}>
+                    <TableCell>
                       {new Date(log.created_at).toLocaleString('fr-FR')}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{log.staff_id}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{log.action}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      <code className="rounded bg-gray-100 px-2 py-1 text-xs">
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{log.staff_id}</TableCell>
+                    <TableCell>{log.action}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      <code className="rounded bg-muted px-2 py-1 text-xs">
                         {JSON.stringify(log.details || {})}
                       </code>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))
               )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
 
-      {/* Pagination */}
       <div className="flex items-center justify-between">
-        <div className="text-sm text-gray-600">
+        <span className="text-sm text-muted-foreground">
           Page {page + 1} sur {totalPages || 1} ({data.total} total)
-        </div>
-        <div className="flex gap-4">
-          <button
+        </span>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => setPage(p => p - 1)}
             disabled={!canPrevious}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
           >
             Précédent
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => setPage(p => p + 1)}
             disabled={!canNext}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
           >
             Suivant
-          </button>
+          </Button>
         </div>
       </div>
     </div>
