@@ -3,6 +3,10 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { recordSale } from '@/app/(authenticated)/customers/[id]/new-sale/actions';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface RecordSaleFormProps {
   customerId: string;
@@ -51,31 +55,28 @@ export function RecordSaleForm({ customerId }: RecordSaleFormProps) {
   if (result) {
     return (
       <div className="space-y-4">
-        <div className="rounded-md bg-green-50 p-4">
-          <p className="text-sm font-medium text-green-700">
+        <Alert className="border-[#3d8a52]/20 bg-[#ecf7ee]">
+          <AlertDescription className="text-[#3d8a52]">
             Vente de {currencyFormatter.format(result.amount)} enregistrée avec succès
-          </p>
-        </div>
+          </AlertDescription>
+        </Alert>
         {result.referralValidated && (
-          <div className="rounded-md bg-blue-50 p-4">
-            <p className="text-sm font-medium text-blue-700">
+          <Alert className="border-accent/20 bg-accent/10">
+            <AlertDescription className="text-accent">
               Parrainage validé ! 1 point attribué au parrain
-            </p>
-          </div>
+            </AlertDescription>
+          </Alert>
         )}
         {result.voucherCreated && (
-          <div className="rounded-md bg-purple-50 p-4">
-            <p className="text-sm font-medium text-purple-700">
+          <Alert className="border-[#4a7ac7]/20 bg-[#edf3fe]">
+            <AlertDescription className="text-[#4a7ac7]">
               Bon d&apos;achat de 20 € généré pour le parrain !
-            </p>
-          </div>
+            </AlertDescription>
+          </Alert>
         )}
-        <Link
-          href={`/customers/${customerId}`}
-          className="inline-block rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 transition-colors"
-        >
-          Retour à la fiche client
-        </Link>
+        <Button asChild>
+          <Link href={`/customers/${customerId}`}>Retour à la fiche client</Link>
+        </Button>
       </div>
     );
   }
@@ -83,16 +84,14 @@ export function RecordSaleForm({ customerId }: RecordSaleFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
-        <div className="rounded-md bg-red-50 p-4">
-          <p className="text-sm text-red-700">{error}</p>
-        </div>
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
-      <div>
-        <label htmlFor="amount" className="block text-sm font-medium text-gray-700">
-          Montant (€)
-        </label>
-        <input
+      <div className="space-y-2">
+        <Label htmlFor="amount">Montant (€)</Label>
+        <Input
           id="amount"
           type="number"
           step="0.01"
@@ -100,25 +99,17 @@ export function RecordSaleForm({ customerId }: RecordSaleFormProps) {
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           placeholder="Montant en euros"
-          className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
           required
         />
       </div>
 
       <div className="flex gap-3">
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
+        <Button type="submit" disabled={isSubmitting}>
           {isSubmitting ? 'Enregistrement en cours...' : 'Enregistrer la vente'}
-        </button>
-        <Link
-          href={`/customers/${customerId}`}
-          className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-        >
-          Annuler
-        </Link>
+        </Button>
+        <Button variant="outline" asChild>
+          <Link href={`/customers/${customerId}`}>Annuler</Link>
+        </Button>
       </div>
     </form>
   );

@@ -26,7 +26,7 @@ export default async function UseVoucherPage({
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-gray-900">
+      <h1 className="text-2xl font-semibold text-foreground">
         Utiliser un bon — {customer.first_name} {customer.last_name}
       </h1>
       <div className="max-w-md">

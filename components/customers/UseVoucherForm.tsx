@@ -3,6 +3,9 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useVoucherAction } from '@/app/(authenticated)/customers/[id]/use-voucher/actions';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface VoucherOption {
   id: string;
@@ -66,17 +69,14 @@ export function UseVoucherForm({ customerId, vouchers, sales }: UseVoucherFormPr
   if (success) {
     return (
       <div className="space-y-4">
-        <div className="rounded-md bg-green-50 p-4">
-          <p className="text-sm font-medium text-green-700">
+        <Alert className="border-[#3d8a52]/20 bg-[#ecf7ee]">
+          <AlertDescription className="text-[#3d8a52]">
             Bon de 20 € utilisé avec succès
-          </p>
-        </div>
-        <Link
-          href={`/customers/${customerId}`}
-          className="inline-block rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 transition-colors"
-        >
-          Retour à la fiche client
-        </Link>
+          </AlertDescription>
+        </Alert>
+        <Button asChild>
+          <Link href={`/customers/${customerId}`}>Retour à la fiche client</Link>
+        </Button>
       </div>
     );
   }
@@ -84,20 +84,18 @@ export function UseVoucherForm({ customerId, vouchers, sales }: UseVoucherFormPr
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
-        <div className="rounded-md bg-red-50 p-4">
-          <p className="text-sm text-red-700">{error}</p>
-        </div>
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
-      <div>
-        <label htmlFor="voucher" className="block text-sm font-medium text-gray-700">
-          Bon d&apos;achat
-        </label>
+      <div className="space-y-2">
+        <Label htmlFor="voucher">Bon d&apos;achat</Label>
         <select
           id="voucher"
           value={voucherId}
           onChange={(e) => setVoucherId(e.target.value)}
-          className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
+          className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
         >
           <option value="">Sélectionner un bon...</option>
           {vouchers.map((v) => (
@@ -108,15 +106,13 @@ export function UseVoucherForm({ customerId, vouchers, sales }: UseVoucherFormPr
         </select>
       </div>
 
-      <div>
-        <label htmlFor="sale" className="block text-sm font-medium text-gray-700">
-          Vente associée
-        </label>
+      <div className="space-y-2">
+        <Label htmlFor="sale">Vente associée</Label>
         <select
           id="sale"
           value={saleId}
           onChange={(e) => setSaleId(e.target.value)}
-          className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
+          className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
         >
           <option value="">Sélectionner une vente...</option>
           {sales.map((s) => (
@@ -128,19 +124,12 @@ export function UseVoucherForm({ customerId, vouchers, sales }: UseVoucherFormPr
       </div>
 
       <div className="flex gap-3">
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
+        <Button type="submit" disabled={isSubmitting}>
           {isSubmitting ? 'Utilisation en cours...' : 'Utiliser le bon'}
-        </button>
-        <Link
-          href={`/customers/${customerId}`}
-          className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-        >
-          Annuler
-        </Link>
+        </Button>
+        <Button variant="outline" asChild>
+          <Link href={`/customers/${customerId}`}>Annuler</Link>
+        </Button>
       </div>
     </form>
   );
