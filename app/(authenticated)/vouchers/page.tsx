@@ -2,6 +2,15 @@ export const dynamic = 'force-dynamic';
 
 import Link from 'next/link';
 import { getAllVouchers } from '@/lib/db/vouchers';
+import { Badge } from '@/components/ui/badge';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
 const dateFormatter = new Intl.DateTimeFormat('fr-FR', {
   day: '2-digit',
@@ -14,75 +23,59 @@ export default async function VouchersPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-gray-900">Bons d&apos;achat</h1>
+      <h1 className="text-2xl font-semibold text-foreground">Bons d&apos;achat</h1>
 
       {vouchers.length > 0 ? (
-        <div className="overflow-x-auto rounded-lg border border-gray-200">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">
-                  Parrain
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">
-                  Email
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">
-                  Statut
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">
-                  Date création
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">
-                  Date utilisation
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
+        <div className="rounded-lg border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Parrain</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Statut</TableHead>
+                <TableHead>Date création</TableHead>
+                <TableHead>Date utilisation</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {vouchers.map((voucher) => (
-                <tr key={voucher.id}>
-                  <td className="whitespace-nowrap px-4 py-3 text-sm">
+                <TableRow key={voucher.id}>
+                  <TableCell>
                     {voucher.referrer ? (
                       <Link
                         href={`/customers/${voucher.referrer_id}`}
-                        className="font-medium text-blue-600 hover:text-blue-800"
+                        className="font-medium text-accent hover:underline"
                       >
                         {voucher.referrer.first_name} {voucher.referrer.last_name}
                       </Link>
                     ) : (
-                      <span className="text-gray-500">Inconnu</span>
+                      <span className="text-muted-foreground">Inconnu</span>
                     )}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
                     {voucher.referrer?.email ?? '—'}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-sm">
+                  </TableCell>
+                  <TableCell>
                     {voucher.status === 'available' ? (
-                      <span className="inline-flex rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
-                        Disponible
-                      </span>
+                      <Badge variant="available">Disponible</Badge>
                     ) : (
-                      <span className="inline-flex rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">
-                        Utilisé
-                      </span>
+                      <Badge variant="secondary">Utilisé</Badge>
                     )}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">
-                    {dateFormatter.format(new Date(voucher.created_at))}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
+                  </TableCell>
+                  <TableCell>{dateFormatter.format(new Date(voucher.created_at))}</TableCell>
+                  <TableCell className="text-muted-foreground">
                     {voucher.used_at
                       ? dateFormatter.format(new Date(voucher.used_at))
                       : '—'}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       ) : (
-        <div className="rounded-lg border border-gray-200 bg-white p-8 text-center">
-          <p className="text-gray-500">Aucun bon d&apos;achat généré pour le moment.</p>
+        <div className="rounded-lg border bg-card p-8 text-center">
+          <p className="text-muted-foreground">Aucun bon d&apos;achat généré pour le moment.</p>
         </div>
       )}
     </div>
