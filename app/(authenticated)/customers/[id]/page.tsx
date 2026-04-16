@@ -6,6 +6,17 @@ import { getCustomer } from '@/app/(authenticated)/customers/actions';
 import { getCustomerById, getCustomersByIds } from '@/lib/db/customers';
 import { createServerSupabase } from '@/lib/supabase/server';
 import { DeleteCustomerButton } from '@/components/customers/DeleteCustomerButton';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
 const dateFormatter = new Intl.DateTimeFormat('fr-FR', {
   day: '2-digit',
@@ -32,7 +43,6 @@ export default async function CustomerDetailPage({
 
   const { customer, sales, referralsAsReferrer, vouchers } = response.data;
 
-  // Check if current user is admin (for delete button visibility)
   const supabase = await createServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
   let isAdmin = false;
@@ -41,7 +51,6 @@ export default async function CustomerDetailPage({
     isAdmin = staff?.role === 'admin';
   }
 
-  // Fetch referrer name if customer has a referrer
   let referrerName: string | null = null;
   if (customer.referrer_id) {
     const referrerResult = await getCustomerById(customer.referrer_id);
@@ -50,45 +59,36 @@ export default async function CustomerDetailPage({
     }
   }
 
-  // Fetch referee names for referrals
   const refereeIds = referralsAsReferrer.map((r) => r.referee_id);
   const referees = await getCustomersByIds(refereeIds);
   const refereeMap = new Map(referees.map((c) => [c.id, c]));
 
-  // Computed stats
   const validatedPoints = referralsAsReferrer.filter((r) => r.status === 'validated').length;
   const totalVouchers = vouchers.length;
   const availableVouchers = vouchers.filter((v) => v.status === 'available').length;
 
   return (
     <div className="space-y-8">
-      {/* Header */}
       <div className="flex items-start justify-between">
         <div className="space-y-1">
           <Link
             href="/customers"
-            className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
-            ← Retour aux clients
+            &larr; Retour aux clients
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-2xl font-semibold text-foreground">
             {customer.first_name} {customer.last_name}
           </h1>
         </div>
         <div className="flex gap-3">
-          <Link
-            href={`/customers/${id}/new-sale`}
-            className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 transition-colors"
-          >
-            Saisir une vente
-          </Link>
+          <Button asChild>
+            <Link href={`/customers/${id}/new-sale`}>Saisir une vente</Link>
+          </Button>
           {availableVouchers > 0 && (
-            <Link
-              href={`/customers/${id}/use-voucher`}
-              className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-              Utiliser un bon
-            </Link>
+            <Button variant="outline" asChild>
+              <Link href={`/customers/${id}/use-voucher`}>Utiliser un bon</Link>
+            </Button>
           )}
           {isAdmin && (
             <DeleteCustomerButton
@@ -99,193 +99,176 @@ export default async function CustomerDetailPage({
         </div>
       </div>
 
-      {/* Infos client */}
-      <div className="rounded-lg border border-gray-200 bg-white p-6 space-y-3">
-        <h2 className="text-lg font-semibold text-gray-900">Informations</h2>
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <span className="text-gray-500">Email : </span>
-            <span className="text-gray-900">{customer.email}</span>
-          </div>
-          <div>
-            <span className="text-gray-500">Téléphone : </span>
-            <span className="text-gray-900">{customer.phone}</span>
-          </div>
-          <div>
-            <span className="text-gray-500">Créé le : </span>
-            <span className="text-gray-900">
-              {dateFormatter.format(new Date(customer.created_at))}
-            </span>
-          </div>
-          {customer.referrer_id && (
+      <Card>
+        <CardHeader>
+          <CardTitle>Informations</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="text-gray-500">Parrainé par : </span>
-              <Link
-                href={`/customers/${customer.referrer_id}`}
-                className="text-blue-600 hover:text-blue-800 font-medium"
-              >
-                {referrerName ?? 'Client inconnu'}
-              </Link>
+              <span className="text-muted-foreground">Email : </span>
+              <span className="text-foreground">{customer.email}</span>
             </div>
-          )}
-        </div>
-      </div>
+            <div>
+              <span className="text-muted-foreground">Téléphone : </span>
+              <span className="text-foreground">{customer.phone}</span>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Créé le : </span>
+              <span className="text-foreground">
+                {dateFormatter.format(new Date(customer.created_at))}
+              </span>
+            </div>
+            {customer.referrer_id && (
+              <div>
+                <span className="text-muted-foreground">Parrainé par : </span>
+                <Link
+                  href={`/customers/${customer.referrer_id}`}
+                  className="text-accent font-medium hover:underline"
+                >
+                  {referrerName ?? 'Client inconnu'}
+                </Link>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Résumé parrainage */}
       <div>
-        <h2 className="mb-4 text-lg font-semibold text-gray-900">Résumé parrainage</h2>
+        <h2 className="mb-4 text-lg font-semibold text-foreground">Résumé parrainage</h2>
         <div className="grid grid-cols-3 gap-4">
-          <div className="rounded-lg border border-gray-200 bg-white p-4">
-            <p className="text-sm font-medium text-gray-500">Points</p>
-            <p className="mt-1 text-2xl font-bold text-gray-900">{validatedPoints}</p>
-          </div>
-          <div className="rounded-lg border border-gray-200 bg-white p-4">
-            <p className="text-sm font-medium text-gray-500">Bons générés</p>
-            <p className="mt-1 text-2xl font-bold text-gray-900">{totalVouchers}</p>
-          </div>
-          <div className="rounded-lg border border-gray-200 bg-white p-4">
-            <p className="text-sm font-medium text-gray-500">Bons disponibles</p>
-            <p className="mt-1 text-2xl font-bold text-gray-900">{availableVouchers}</p>
-          </div>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Points</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-foreground">{validatedPoints}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Bons générés</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-foreground">{totalVouchers}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Bons disponibles</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-foreground">{availableVouchers}</p>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
-      {/* Historique des ventes */}
       <div>
-        <h2 className="mb-4 text-lg font-semibold text-gray-900">Historique des ventes</h2>
+        <h2 className="mb-4 text-lg font-semibold text-foreground">Historique des ventes</h2>
         {sales.length > 0 ? (
-          <div className="overflow-x-auto rounded-lg border border-gray-200">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">
-                    Date
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">
-                    Montant
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 bg-white">
+          <div className="rounded-lg border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Montant</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {sales.map((sale) => (
-                  <tr key={sale.id}>
-                    <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">
-                      {dateFormatter.format(new Date(sale.created_at))}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">
-                      {currencyFormatter.format(sale.amount)}
-                    </td>
-                  </tr>
+                  <TableRow key={sale.id}>
+                    <TableCell>{dateFormatter.format(new Date(sale.created_at))}</TableCell>
+                    <TableCell>{currencyFormatter.format(sale.amount)}</TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         ) : (
-          <p className="text-sm text-gray-500">Aucune vente enregistrée</p>
+          <p className="text-sm text-muted-foreground">Aucune vente enregistrée</p>
         )}
       </div>
 
-      {/* Filleuls */}
       <div>
-        <h2 className="mb-4 text-lg font-semibold text-gray-900">Filleuls</h2>
+        <h2 className="mb-4 text-lg font-semibold text-foreground">Filleuls</h2>
         {referralsAsReferrer.length > 0 ? (
-          <div className="overflow-x-auto rounded-lg border border-gray-200">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">
-                    Nom
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">
-                    Statut
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 bg-white">
+          <div className="rounded-lg border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nom</TableHead>
+                  <TableHead>Statut</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {referralsAsReferrer.map((referral) => {
                   const referee = refereeMap.get(referral.referee_id);
                   return (
-                    <tr key={referral.id}>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm">
+                    <TableRow key={referral.id}>
+                      <TableCell>
                         <Link
                           href={`/customers/${referral.referee_id}`}
-                          className="font-medium text-blue-600 hover:text-blue-800"
+                          className="font-medium text-accent hover:underline"
                         >
                           {referee
                             ? `${referee.first_name} ${referee.last_name}`
                             : 'Client inconnu'}
                         </Link>
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm">
+                      </TableCell>
+                      <TableCell>
                         {referral.status === 'validated' ? (
-                          <span className="inline-flex rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
-                            Validé
-                          </span>
+                          <Badge variant="validated">Validé</Badge>
                         ) : (
-                          <span className="inline-flex rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-700">
-                            En attente
-                          </span>
+                          <Badge variant="pending">En attente</Badge>
                         )}
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   );
                 })}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         ) : (
-          <p className="text-sm text-gray-500">Aucun filleul</p>
+          <p className="text-sm text-muted-foreground">Aucun filleul</p>
         )}
       </div>
 
-      {/* Bons d'achat */}
       <div>
-        <h2 className="mb-4 text-lg font-semibold text-gray-900">Bons d&apos;achat</h2>
+        <h2 className="mb-4 text-lg font-semibold text-foreground">Bons d&apos;achat</h2>
         {vouchers.length > 0 ? (
-          <div className="overflow-x-auto rounded-lg border border-gray-200">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">
-                    Statut
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">
-                    Date création
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">
-                    Date utilisation
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 bg-white">
+          <div className="rounded-lg border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Statut</TableHead>
+                  <TableHead>Date création</TableHead>
+                  <TableHead>Date utilisation</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {vouchers.map((voucher) => (
-                  <tr key={voucher.id}>
-                    <td className="whitespace-nowrap px-4 py-3 text-sm">
+                  <TableRow key={voucher.id}>
+                    <TableCell>
                       {voucher.status === 'available' ? (
-                        <span className="inline-flex rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
-                          Disponible
-                        </span>
+                        <Badge variant="available">Disponible</Badge>
                       ) : (
-                        <span className="inline-flex rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">
-                          Utilisé
-                        </span>
+                        <Badge variant="secondary">Utilisé</Badge>
                       )}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">
-                      {dateFormatter.format(new Date(voucher.created_at))}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
+                    </TableCell>
+                    <TableCell>{dateFormatter.format(new Date(voucher.created_at))}</TableCell>
+                    <TableCell className="text-muted-foreground">
                       {voucher.used_at
                         ? dateFormatter.format(new Date(voucher.used_at))
                         : '—'}
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         ) : (
-          <p className="text-sm text-gray-500">Aucun bon d&apos;achat</p>
+          <p className="text-sm text-muted-foreground">Aucun bon d&apos;achat</p>
         )}
       </div>
     </div>

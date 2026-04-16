@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { deleteCustomer } from '@/app/(authenticated)/customers/actions';
+import { Button } from '@/components/ui/button';
 
 interface DeleteCustomerButtonProps {
   customerId: string;
@@ -37,14 +38,15 @@ export function DeleteCustomerButton({ customerId, customerName }: DeleteCustome
 
   return (
     <>
-      <button
+      <Button
+        variant="destructive"
+        size="sm"
         onClick={handleDelete}
         disabled={isDeleting}
-        className="rounded-md border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {isDeleting ? 'Suppression...' : 'Supprimer'}
-      </button>
-      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+      </Button>
+      {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
     </>
   );
 }
