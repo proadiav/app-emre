@@ -3,6 +3,19 @@
 import { useState, useEffect } from 'react';
 import { listStaffAction, createStaffAction, deleteStaffAction } from './actions';
 import { ApiResponse } from '@/lib/utils/errors';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
 interface StaffData {
   id: string;
@@ -20,11 +33,9 @@ export default function StaffPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  // Form state
   const [newEmail, setNewEmail] = useState('');
   const [newRole, setNewRole] = useState<'admin' | 'vendeur'>('vendeur');
 
-  // Fetch staff list on mount
   useEffect(() => {
     async function fetchStaff() {
       setLoading(true);
@@ -46,7 +57,6 @@ export default function StaffPage() {
     fetchStaff();
   }, []);
 
-  // Handle add staff
   async function handleAddStaff(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!newEmail.trim()) return;
@@ -78,11 +88,8 @@ export default function StaffPage() {
     }
   }
 
-  // Handle delete staff
   async function handleDeleteStaff(id: string) {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer ce membre du personnel ?')) {
-      return;
-    }
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce membre du personnel ?')) return;
 
     setDeleting(id);
     setError(null);
@@ -106,113 +113,110 @@ export default function StaffPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold text-gray-900">Gestion du personnel</h1>
-        <p className="text-gray-600">Chargement...</p>
+        <h1 className="text-2xl font-semibold text-foreground">Gestion du personnel</h1>
+        <p className="text-muted-foreground">Chargement...</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-gray-900">Gestion du personnel</h1>
+      <h1 className="text-2xl font-semibold text-foreground">Gestion du personnel</h1>
 
       {error && (
-        <div className="rounded-lg bg-red-50 p-4">
-          <p className="text-red-900">{error}</p>
-        </div>
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
       {success && (
-        <div className="rounded-lg bg-green-50 p-4">
-          <p className="text-green-900">Personnel ajouté avec succès</p>
-        </div>
+        <Alert className="border-[#3d8a52]/20 bg-[#ecf7ee]">
+          <AlertDescription className="text-[#3d8a52]">
+            Personnel ajouté avec succès
+          </AlertDescription>
+        </Alert>
       )}
 
-      {/* Add staff form */}
-      <form onSubmit={handleAddStaff} className="rounded-lg bg-white p-6 shadow">
-        <h2 className="mb-4 text-lg font-bold text-gray-900">Ajouter un membre du personnel</h2>
-        <div className="flex gap-4">
-          <div className="flex-1">
-            <input
-              type="email"
-              value={newEmail}
-              onChange={e => setNewEmail(e.target.value)}
-              placeholder="Email"
-              required
-              className="block w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-900 focus:border-blue-500 focus:outline-none"
-            />
-          </div>
-          <div>
-            <select
-              value={newRole}
-              onChange={e => setNewRole(e.target.value as 'admin' | 'vendeur')}
-              className="block w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-900 focus:border-blue-500 focus:outline-none"
-            >
-              <option value="vendeur">Vendeur</option>
-              <option value="admin">Admin</option>
-            </select>
-          </div>
-          <button
-            type="submit"
-            disabled={adding}
-            className="rounded-lg bg-blue-600 px-6 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
-          >
-            {adding ? 'Ajout...' : 'Ajouter'}
-          </button>
-        </div>
-      </form>
+      <Card>
+        <CardHeader>
+          <CardTitle>Ajouter un membre du personnel</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleAddStaff} className="flex gap-4">
+            <div className="flex-1">
+              <Input
+                type="email"
+                value={newEmail}
+                onChange={e => setNewEmail(e.target.value)}
+                placeholder="Email"
+                required
+              />
+            </div>
+            <div>
+              <select
+                value={newRole}
+                onChange={e => setNewRole(e.target.value as 'admin' | 'vendeur')}
+                className="flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              >
+                <option value="vendeur">Vendeur</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            <Button type="submit" disabled={adding}>
+              {adding ? 'Ajout...' : 'Ajouter'}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
 
-      {/* Staff table */}
-      <div className="rounded-lg bg-white shadow">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="border-b border-gray-200 bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Email</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Rôle</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Date création</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
+      <Card>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Email</TableHead>
+                <TableHead>Rôle</TableHead>
+                <TableHead>Date création</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {staff.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-6 py-4 text-center text-gray-600">
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center text-muted-foreground">
                     Aucun personnel
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ) : (
                 staff.map((member) => (
-                  <tr key={member.id} className="border-b border-gray-200 hover:bg-gray-50">
-                    <td className="px-6 py-4 text-sm text-gray-900">{member.email}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      <span className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${
-                        member.role === 'admin'
-                          ? 'bg-purple-100 text-purple-900'
-                          : 'bg-blue-100 text-blue-900'
-                      }`}>
+                  <TableRow key={member.id}>
+                    <TableCell>{member.email}</TableCell>
+                    <TableCell>
+                      <Badge variant={member.role === 'admin' ? 'default' : 'secondary'}>
                         {member.role === 'admin' ? 'Admin' : 'Vendeur'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
                       {new Date(member.created_at).toLocaleDateString('fr-FR')}
-                    </td>
-                    <td className="px-6 py-4 text-sm">
-                      <button
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => handleDeleteStaff(member.id)}
                         disabled={deleting === member.id}
-                        className="text-red-600 hover:text-red-900 disabled:opacity-50"
+                        className="text-destructive hover:text-destructive"
                       >
                         {deleting === member.id ? 'Suppression...' : 'Supprimer'}
-                      </button>
-                    </td>
-                  </tr>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
                 ))
               )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
 }
