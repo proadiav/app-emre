@@ -3,6 +3,17 @@
 import { useState, useEffect } from 'react';
 import { getStatisticsAction, exportStatsAsCSVAction } from './actions';
 import { ApiResponse } from '@/lib/utils/errors';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
 interface StatisticsData {
   totalCustomers: number;
@@ -24,7 +35,6 @@ export default function StatsPage() {
   const [exporting, setExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch stats on mount
   useEffect(() => {
     async function fetchStats() {
       setLoading(true);
@@ -46,14 +56,12 @@ export default function StatsPage() {
     fetchStats();
   }, []);
 
-  // Handle CSV export
   async function handleExportCSV() {
     setExporting(true);
     setError(null);
     try {
       const result = (await exportStatsAsCSVAction()) as ApiResponse<string>;
       if (result.success && result.data) {
-        // Create a blob and download
         const blob = new Blob([result.data], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');
         const url = URL.createObjectURL(blob);
@@ -77,8 +85,8 @@ export default function StatsPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold text-gray-900">Statistiques</h1>
-        <p className="text-gray-600">Chargement...</p>
+        <h1 className="text-2xl font-semibold text-foreground">Statistiques</h1>
+        <p className="text-muted-foreground">Chargement...</p>
       </div>
     );
   }
@@ -86,8 +94,8 @@ export default function StatsPage() {
   if (!stats) {
     return (
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold text-gray-900">Statistiques</h1>
-        <p className="text-red-600">Impossible de charger les statistiques</p>
+        <h1 className="text-2xl font-semibold text-foreground">Statistiques</h1>
+        <p className="text-destructive">Impossible de charger les statistiques</p>
       </div>
     );
   }
@@ -95,80 +103,73 @@ export default function StatsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-900">Statistiques</h1>
-        <button
-          onClick={handleExportCSV}
-          disabled={exporting}
-          className="rounded-lg bg-green-600 px-6 py-2 text-white hover:bg-green-700 disabled:opacity-50"
-        >
+        <h1 className="text-2xl font-semibold text-foreground">Statistiques</h1>
+        <Button onClick={handleExportCSV} disabled={exporting} variant="outline">
           {exporting ? 'Export en cours...' : 'Exporter en CSV'}
-        </button>
+        </Button>
       </div>
 
       {error && (
-        <div className="rounded-lg bg-red-50 p-4">
-          <p className="text-red-900">{error}</p>
-        </div>
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
-      {/* Stats cards */}
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-lg bg-white p-6 shadow">
-          <p className="text-sm text-gray-600">Total clients</p>
-          <p className="text-3xl font-bold text-gray-900">{stats.totalCustomers}</p>
-        </div>
-        <div className="rounded-lg bg-white p-6 shadow">
-          <p className="text-sm text-gray-600">Total parrainages</p>
-          <p className="text-3xl font-bold text-gray-900">{stats.totalReferrals}</p>
-        </div>
-        <div className="rounded-lg bg-white p-6 shadow">
-          <p className="text-sm text-gray-600">Total ventes</p>
-          <p className="text-3xl font-bold text-gray-900">{stats.totalSalesAmount.toFixed(2)} €</p>
-        </div>
-        <div className="rounded-lg bg-white p-6 shadow">
-          <p className="text-sm text-gray-600">Bons générés</p>
-          <p className="text-3xl font-bold text-gray-900">{stats.totalVouchersGenerated}</p>
-        </div>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {[
+          { label: 'Total clients', value: stats.totalCustomers },
+          { label: 'Total parrainages', value: stats.totalReferrals },
+          { label: 'Total ventes', value: `${stats.totalSalesAmount.toFixed(2)} €` },
+          { label: 'Bons générés', value: stats.totalVouchersGenerated },
+        ].map((kpi) => (
+          <Card key={kpi.label}>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                {kpi.label}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-foreground">{kpi.value}</p>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      {/* Top referrers table */}
-      <div className="rounded-lg bg-white shadow">
-        <div className="border-b border-gray-200 px-6 py-4">
-          <h2 className="text-lg font-bold text-gray-900">Top 10 parrains</h2>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="border-b border-gray-200 bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Rang</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Email</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Nom</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Filleuls validés</th>
-              </tr>
-            </thead>
-            <tbody>
+      <Card>
+        <CardHeader>
+          <CardTitle>Top 10 parrains</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Rang</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Nom</TableHead>
+                <TableHead>Filleuls validés</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {stats.topReferrers.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-6 py-4 text-center text-gray-600">
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center text-muted-foreground">
                     Aucun parrain pour le moment
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ) : (
                 stats.topReferrers.map((referrer, index) => (
-                  <tr key={referrer.customerId} className="border-b border-gray-200 hover:bg-gray-50">
-                    <td className="px-6 py-4 text-sm text-gray-900">{index + 1}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{referrer.email}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {referrer.firstName} {referrer.lastName}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{referrer.count}</td>
-                  </tr>
+                  <TableRow key={referrer.customerId}>
+                    <TableCell>{index + 1}</TableCell>
+                    <TableCell>{referrer.email}</TableCell>
+                    <TableCell>{referrer.firstName} {referrer.lastName}</TableCell>
+                    <TableCell>{referrer.count}</TableCell>
+                  </TableRow>
                 ))
               )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
 }
